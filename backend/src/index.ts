@@ -23,6 +23,14 @@ import { initializeEternalOnlineProcesses, stopAllEternalOnlineProcesses } from 
 
 const app = express();
 
+// Определяем разрешенные origins
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'https://callcentre.lead-schem.ru',
+  'http://localhost:3000',
+  'http://localhost:3001'
+];
+
 // Настройка SSL и серверов
 const sslConfig = getSSLConfig();
 let server: any;
@@ -84,13 +92,6 @@ app.use(helmet({
 }));
 
 // CORS configuration
-const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3000",
-  "https://callcentre.lead-schem.ru",
-  "http://localhost:3000", // для разработки
-  "http://127.0.0.1:3000",
-];
-
 app.use(cors({
   origin: (origin, callback) => {
     // Разрешаем запросы без origin (например, мобильные приложения)
