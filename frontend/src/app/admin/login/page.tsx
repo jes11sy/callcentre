@@ -1,0 +1,235 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Eye, EyeOff, Shield, Loader2, Settings, Users, BarChart3, User, Lock, ArrowRight } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
+import { authApi, LoginCredentials } from '@/lib/auth';
+import { useAuthStore } from '@/store/authStore';
+
+const adminLoginSchema = z.object({
+  login: z.string().min(1, 'Логин обязателен').min(3, 'Минимум 3 символа'),
+  password: z.string().min(1, 'Пароль обязателен').min(3, 'Минимум 3 символа'),
+});
+
+type AdminLoginFormData = z.infer<typeof adminLoginSchema>;
+
+export default function AdminLoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const router = useRouter();
+  const { login: loginUser } = useAuthStore();
+
+  const form = useForm<AdminLoginFormData>({
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: {
+      login: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: AdminLoginFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const loginData: LoginCredentials = {
+        ...data,
+        role: 'admin'
+      };
+      
+      const response = await authApi.login(loginData);
+      
+      // Check if user is actually admin
+      if (response.data.user.role !== 'admin') {
+        setError('Доступ запрещен. Только для администраторов.');
+        return;
+      }
+      
+      // Save tokens and user data
+      authApi.saveTokens(response.data.accessToken, response.data.refreshToken);
+      authApi.saveUser(response.data.user);
+      loginUser(response.data.user);
+
+      // Redirect to admin dashboard
+      router.push('/admin');
+    } catch (err: any) {
+      console.error('Admin login error:', err);
+      setError(
+        err.response?.data?.error?.message || 
+        'Ошибка входа. Проверьте логин и пароль.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-gray-100 flex flex-col items-center justify-center p-4">
+      {/* Logo Section */}
+      <div className="flex flex-col items-center mb-8">
+        <div className="flex items-center gap-4 text-4xl font-bold text-gray-100 mb-2">
+          <Shield className="text-purple-500 text-5xl" />
+          <span>Admin Panel</span>
+        </div>
+        <div className="text-gray-400 text-xl font-medium">
+          Административная панель CRM
+        </div>
+      </div>
+
+      {/* Login Card */}
+      <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-md rounded-2xl p-10 shadow-2xl border border-white/10">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+            Вход для администраторов
+          </h1>
+          <p className="text-gray-400">Введите учетные данные администратора</p>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="login"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-300 text-base font-medium">Логин администратора</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+                      <Input
+                        placeholder="Введите логин"
+                        {...field}
+                        disabled={isLoading}
+                        className="h-12 pl-10 bg-slate-800 border-slate-700 text-gray-100 placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500/20"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-300 text-base font-medium">Пароль</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Введите пароль"
+                        {...field}
+                        disabled={isLoading}
+                        className="h-12 pl-10 pr-12 bg-slate-800 border-slate-700 text-gray-100 placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500/20"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-12 px-3 text-gray-500 hover:text-gray-300 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {error && (
+              <div className="text-red-400 text-sm text-center bg-red-500/10 p-4 rounded-lg border border-red-500/20">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all duration-300 hover:-translate-y-0.5 shadow-lg"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Вход в систему...
+                </>
+              ) : (
+                <>
+                  <Shield className="mr-2 h-5 w-5" />
+                  Войти в админ панель
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+
+        <div className="mt-6 text-center">
+          <a
+            href="/login"
+            className="text-sm text-purple-400 hover:text-purple-300 underline transition-colors"
+          >
+            Вход для операторов
+          </a>
+        </div>
+
+        <div className="mt-4 text-center text-xs text-gray-500">
+          <p>Тестовые данные: admin / admin123</p>
+        </div>
+      </div>
+
+      {/* Admin Features Section */}
+      <div className="mt-12 w-full max-w-2xl">
+        <h2 className="text-2xl font-bold text-gray-100 text-center mb-6">
+          Возможности администратора
+        </h2>
+        <div className="flex justify-center gap-8">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-purple-500/15 rounded-2xl flex items-center justify-center mb-4">
+              <Users className="h-8 w-8 text-purple-500" />
+            </div>
+            <span className="text-gray-100 font-medium">Сотрудники</span>
+          </div>
+          
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-purple-500/15 rounded-2xl flex items-center justify-center mb-4">
+              <Settings className="h-8 w-8 text-purple-500" />
+            </div>
+            <span className="text-gray-100 font-medium">Настройки</span>
+          </div>
+          
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-purple-500/15 rounded-2xl flex items-center justify-center mb-4">
+              <BarChart3 className="h-8 w-8 text-purple-500" />
+            </div>
+            <span className="text-gray-100 font-medium">Аналитика</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-12 text-center text-gray-500 text-sm">
+        © 2025 Новые Схемы. Все права защищены.
+      </div>
+    </div>
+  );
+}

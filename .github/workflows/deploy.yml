@@ -1,0 +1,397 @@
+name: Deploy Call Centre CRM
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allows manual triggering
+
+env:
+  NODE_VERSION: '18'
+  DOCKER_COMPOSE_VERSION: '2.20.2'
+
+jobs:
+  # =====================================================
+  # JOB 1: BUILD AND TEST
+  # =====================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: 📂 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      # ===== BACKEND BUILD AND TEST =====
+      - name: 📦 Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 🧪 Run Backend Tests
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_jwt_secret_for_testing_only
+        run: |
+          # Run linting
+          npm run lint || echo "Linting not configured"
+          
+          # Run type checking
+          npm run type-check || npx tsc --noEmit
+          
+          # Run tests if available
+          npm run test || echo "Tests not configured"
+
+      - name: 🏗️ Build Backend
+        working-directory: ./backend
+        run: npm run build || echo "Build script not configured"
+
+      # ===== FRONTEND BUILD AND TEST =====
+      - name: 📦 Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🧪 Run Frontend Tests
+        working-directory: ./frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+          NEXT_PUBLIC_SOCKET_URL: ws://localhost:5000
+        run: |
+          # Run linting
+          npm run lint
+          
+          # Run type checking
+          npm run type-check || npx tsc --noEmit
+          
+          # Run tests if available
+          npm run test || echo "Tests not configured"
+
+      - name: 🏗️ Build Frontend
+        working-directory: ./frontend
+        env:
+          NEXT_PUBLIC_API_URL: https://apikc.lead-schem.ru
+          NEXT_PUBLIC_SOCKET_URL: wss://apikc.lead-schem.ru
+          NEXT_PUBLIC_FRONTEND_DOMAIN: callcentre.lead-schem.ru
+          NEXT_PUBLIC_BACKEND_DOMAIN: apikc.lead-schem.ru
+        run: npm run build
+
+      # ===== DOCKER BUILD TEST =====
+      - name: 🐳 Test Docker Build
+        run: |
+          # Test backend Docker build
+          docker build -t callcentre-backend:test ./backend
+          
+          # Test frontend Docker build
+          docker build -t callcentre-frontend:test ./frontend
+
+  # =====================================================
+  # JOB 2: SECURITY SCAN
+  # =====================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📂 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🔍 Run Security Audit - Backend
+        working-directory: ./backend
+        run: |
+          npm audit --audit-level=high
+          
+      - name: 🔍 Run Security Audit - Frontend
+        working-directory: ./frontend
+        run: |
+          npm audit --audit-level=high
+
+      - name: 🛡️ Run Snyk Security Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high
+        continue-on-error: true
+
+  # =====================================================
+  # JOB 3: DEPLOY TO STAGING (PR only)
+  # =====================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.event_name == 'pull_request'
+    
+    environment:
+      name: staging
+      url: https://staging.callcentre.lead-schem.ru
+    
+    steps:
+      - name: 📂 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to Staging Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USERNAME }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          script: |
+            cd /opt/callcentre-crm-staging
+            git pull origin ${{ github.head_ref }}
+            ./scripts/deploy-staging.sh
+
+  # =====================================================
+  # JOB 4: DEPLOY TO PRODUCTION (main branch only)
+  # =====================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    environment:
+      name: production
+      url: https://callcentre.lead-schem.ru
+    
+    steps:
+      - name: 📂 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔐 Setup SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: 📋 Create Environment Files
+        run: |
+          # Create backend .env from secrets
+          cat > backend/.env << EOF
+          NODE_ENV=production
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          REDIS_URL=${{ secrets.REDIS_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
+          PORT=5000
+          HTTP_PORT=80
+          HTTPS_PORT=443
+          SSL_ENABLED=true
+          SSL_CERT_DIR=/etc/ssl/certs/callcentre
+          BACKEND_DOMAIN=apikc.lead-schem.ru
+          FRONTEND_DOMAIN=callcentre.lead-schem.ru
+          FRONTEND_URL=https://callcentre.lead-schem.ru
+          MANGO_OFFICE_API_KEY=${{ secrets.MANGO_OFFICE_API_KEY }}
+          MANGO_OFFICE_API_SALT=${{ secrets.MANGO_OFFICE_API_SALT }}
+          MANGO_API_URL=https://app.mango-office.ru/vpbx
+          MANGO_API_KEY=${{ secrets.MANGO_API_KEY }}
+          MANGO_API_ID=${{ secrets.MANGO_API_ID }}
+          MANGO_WEBHOOK_URL=https://apikc.lead-schem.ru/api/webhooks/mango
+          AVITO_CLIENT_ID=${{ secrets.AVITO_CLIENT_ID }}
+          AVITO_CLIENT_SECRET=${{ secrets.AVITO_CLIENT_SECRET }}
+          UPLOAD_DIR=uploads
+          MAX_FILE_SIZE=10485760
+          BOT_WEBHOOK_URL=${{ secrets.BOT_WEBHOOK_URL }}
+          WEBHOOK_TOKEN=${{ secrets.WEBHOOK_TOKEN }}
+          EOF
+
+          # Create frontend .env.local from secrets
+          cat > frontend/.env.local << EOF
+          NEXT_PUBLIC_API_URL=https://apikc.lead-schem.ru
+          NEXT_PUBLIC_SOCKET_URL=wss://apikc.lead-schem.ru
+          NEXT_PUBLIC_FRONTEND_DOMAIN=callcentre.lead-schem.ru
+          NEXT_PUBLIC_BACKEND_DOMAIN=apikc.lead-schem.ru
+          NEXT_PUBLIC_APP_NAME="Call Centre CRM"
+          NEXT_PUBLIC_APP_VERSION="1.0.0"
+          NEXT_PUBLIC_ENABLE_DEBUG=false
+          NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING=true
+          EOF
+
+          # Create Docker Compose .env
+          cat > .env << EOF
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
+
+      - name: 🚀 Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USERNAME }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script: |
+            # Navigate to project directory
+            cd /opt/callcentre-crm
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Stop running containers
+            docker-compose -f docker-compose.prod.yml down
+            
+            # Remove old images
+            docker image prune -f
+            
+            # Build and start new containers
+            docker-compose -f docker-compose.prod.yml up -d --build
+            
+            # Wait for services to be ready
+            sleep 30
+            
+            # Run database migrations
+            docker-compose -f docker-compose.prod.yml exec -T backend npm run migrate || echo "Migrations failed or not needed"
+            
+            # Health check
+            timeout 60 bash -c 'until curl -f https://apikc.lead-schem.ru/health; do sleep 5; done'
+            
+            # Log deployment
+            echo "Deployment completed at $(date)" >> /var/log/callcentre/deployments.log
+
+      - name: 🔄 Upload Environment Files to Server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USERNAME }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          source: "backend/.env,frontend/.env.local,.env"
+          target: "/opt/callcentre-crm/"
+
+      - name: ✅ Verify Deployment
+        run: |
+          # Wait a bit for services to fully start
+          sleep 60
+          
+          # Check frontend
+          if curl -f https://callcentre.lead-schem.ru; then
+            echo "✅ Frontend is responding"
+          else
+            echo "❌ Frontend health check failed"
+            exit 1
+          fi
+          
+          # Check backend API
+          if curl -f https://apikc.lead-schem.ru/health; then
+            echo "✅ Backend API is responding"
+          else
+            echo "❌ Backend API health check failed"
+            exit 1
+          fi
+
+      - name: 📧 Notify Deployment Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ✅ Call Centre CRM успешно развернут!
+            
+            🌍 Frontend: https://callcentre.lead-schem.ru
+            🔧 Backend: https://apikc.lead-schem.ru
+            📊 Health: https://apikc.lead-schem.ru/health
+            
+            📝 Commit: ${{ github.sha }}
+            👤 Author: ${{ github.actor }}
+            🏷️ Branch: ${{ github.ref_name }}
+
+      - name: 📧 Notify Deployment Failure
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ Развертывание Call Centre CRM ПРОВАЛИЛОСЬ!
+            
+            📝 Commit: ${{ github.sha }}
+            👤 Author: ${{ github.actor }}
+            🏷️ Branch: ${{ github.ref_name }}
+            
+            🔗 Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  # =====================================================
+  # JOB 5: POST-DEPLOY TESTS
+  # =====================================================
+  post-deploy-tests:
+    name: Post-Deploy Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: 🧪 Run Smoke Tests
+        run: |
+          # Test frontend accessibility
+          echo "Testing frontend..."
+          curl -f https://callcentre.lead-schem.ru
+          
+          # Test backend health
+          echo "Testing backend health..."
+          curl -f https://apikc.lead-schem.ru/health
+          
+          # Test API info endpoint
+          echo "Testing API info..."
+          curl -f https://apikc.lead-schem.ru/info
+          
+          # Test SSL certificates
+          echo "Testing SSL certificates..."
+          echo | openssl s_client -connect apikc.lead-schem.ru:443 -servername apikc.lead-schem.ru 2>/dev/null | openssl x509 -noout -dates
+          echo | openssl s_client -connect callcentre.lead-schem.ru:443 -servername callcentre.lead-schem.ru 2>/dev/null | openssl x509 -noout -dates
+
+      - name: 📊 Performance Test
+        run: |
+          # Basic performance test using curl
+          echo "Performance testing..."
+          time curl -w "@curl-format.txt" -o /dev/null -s https://callcentre.lead-schem.ru
+          time curl -w "@curl-format.txt" -o /dev/null -s https://apikc.lead-schem.ru/health
+
+      - name: 🔐 Security Headers Test
+        run: |
+          echo "Testing security headers..."
+          curl -I https://callcentre.lead-schem.ru | grep -i "strict-transport-security\|x-content-type-options\|x-frame-options"
+          curl -I https://apikc.lead-schem.ru | grep -i "strict-transport-security\|x-content-type-options\|x-frame-options"

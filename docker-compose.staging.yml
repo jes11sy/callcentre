@@ -1,0 +1,184 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: callcentre-postgres-staging
+    environment:
+      POSTGRES_DB: staging_db
+      POSTGRES_USER: staging_user
+      POSTGRES_PASSWORD: ${STAGING_POSTGRES_PASSWORD}
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"  # Different port for staging
+    restart: unless-stopped
+    networks:
+      - callcentre-staging-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U staging_user -d staging_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: callcentre-redis-staging
+    command: redis-server --appendonly yes --requirepass ${STAGING_REDIS_PASSWORD}
+    volumes:
+      - redis_staging_data:/data
+    ports:
+      - "6380:6379"  # Different port for staging
+    restart: unless-stopped
+    networks:
+      - callcentre-staging-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: staging
+    container_name: callcentre-backend-staging
+    environment:
+      NODE_ENV: staging
+      DATABASE_URL: postgresql://staging_user:${STAGING_POSTGRES_PASSWORD}@postgres:5432/staging_db
+      REDIS_URL: redis://:${STAGING_REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${STAGING_JWT_SECRET}
+      SSL_ENABLED: true
+      SSL_CERT_DIR: /etc/ssl/certs/callcentre
+      HTTPS_PORT: 443
+      HTTP_PORT: 80
+      BACKEND_DOMAIN: staging-api.lead-schem.ru
+      FRONTEND_DOMAIN: staging.callcentre.lead-schem.ru
+      FRONTEND_URL: https://staging.callcentre.lead-schem.ru
+      MANGO_WEBHOOK_URL: https://staging-api.lead-schem.ru/api/webhooks/mango
+      
+      # External APIs (staging/test keys)
+      MANGO_OFFICE_API_KEY: ${STAGING_MANGO_OFFICE_API_KEY}
+      MANGO_OFFICE_API_SALT: ${STAGING_MANGO_OFFICE_API_SALT}
+      MANGO_API_KEY: ${STAGING_MANGO_API_KEY}
+      MANGO_API_ID: ${STAGING_MANGO_API_ID}
+      AVITO_CLIENT_ID: ${STAGING_AVITO_CLIENT_ID}
+      AVITO_CLIENT_SECRET: ${STAGING_AVITO_CLIENT_SECRET}
+      
+      # Feature flags for staging
+      ENABLE_DEBUG_LOGS: true
+      ENABLE_VERBOSE_LOGGING: true
+      DISABLE_RATE_LIMITING: true
+      
+    volumes:
+      - ./ssl:/etc/ssl/certs/callcentre:ro
+      - backend_staging_uploads:/app/uploads
+      - backend_staging_logs:/app/logs
+    ports:
+      - "5001:5000"  # Different port for staging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - callcentre-staging-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: staging
+        NEXT_PUBLIC_API_URL: https://staging-api.lead-schem.ru
+        NEXT_PUBLIC_SOCKET_URL: wss://staging-api.lead-schem.ru
+        NEXT_PUBLIC_APP_NAME: "Call Centre CRM (Staging)"
+        NEXT_PUBLIC_ENABLE_DEBUG: true
+    container_name: callcentre-frontend-staging
+    environment:
+      NODE_ENV: staging
+      NEXT_PUBLIC_API_URL: https://staging-api.lead-schem.ru
+      NEXT_PUBLIC_SOCKET_URL: wss://staging-api.lead-schem.ru
+      NEXT_PUBLIC_FRONTEND_DOMAIN: staging.callcentre.lead-schem.ru
+      NEXT_PUBLIC_BACKEND_DOMAIN: staging-api.lead-schem.ru
+      NEXT_PUBLIC_APP_NAME: "Call Centre CRM (Staging)"
+      NEXT_PUBLIC_APP_VERSION: "1.0.0-staging"
+      NEXT_PUBLIC_ENABLE_DEBUG: true
+      NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: false
+    ports:
+      - "3001:3000"  # Different port for staging
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - callcentre-staging-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy (optional for staging)
+  nginx:
+    image: nginx:alpine
+    container_name: callcentre-nginx-staging
+    volumes:
+      - ./config/nginx/staging.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/ssl/certs/callcentre:ro
+      - ./logs/nginx-staging:/var/log/nginx
+    ports:
+      - "8080:80"   # HTTP staging port
+      - "8443:443"  # HTTPS staging port
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - callcentre-staging-network
+
+  # Monitoring and logging (staging-specific)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: callcentre-watchtower-staging
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *  # 4 AM daily
+      - WATCHTOWER_INCLUDE_STOPPED=true
+      - WATCHTOWER_LABEL_ENABLE=true
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - callcentre-staging-network
+
+volumes:
+  postgres_staging_data:
+    driver: local
+  redis_staging_data:
+    driver: local
+  backend_staging_uploads:
+    driver: local
+  backend_staging_logs:
+    driver: local
+
+networks:
+  callcentre-staging-network:
+    driver: bridge
+    name: callcentre-staging-net

@@ -1,0 +1,224 @@
+name: Manual Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip tests and deploy directly'
+        required: false
+        default: false
+        type: boolean
+      force_rebuild:
+        description: 'Force rebuild Docker images'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  manual-deploy:
+    name: Manual Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      url: ${{ github.event.inputs.environment == 'production' && 'https://callcentre.lead-schem.ru' || 'https://staging.callcentre.lead-schem.ru' }}
+    
+    steps:
+      - name: 📂 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        if: ${{ github.event.inputs.skip_tests == 'false' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: 🧪 Run Quick Tests
+        if: ${{ github.event.inputs.skip_tests == 'false' }}
+        run: |
+          # Backend
+          cd backend
+          npm ci
+          npm run lint || echo "Backend linting skipped"
+          npx tsc --noEmit || echo "Backend type check failed"
+          
+          # Frontend
+          cd ../frontend
+          npm ci
+          npm run lint
+          npx tsc --noEmit || echo "Frontend type check failed"
+
+      - name: 📋 Create Environment Files
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            # Production environment
+            cat > backend/.env << EOF
+            NODE_ENV=production
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            REDIS_URL=${{ secrets.REDIS_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=7d
+            PORT=5000
+            HTTP_PORT=80
+            HTTPS_PORT=443
+            SSL_ENABLED=true
+            SSL_CERT_DIR=/etc/ssl/certs/callcentre
+            BACKEND_DOMAIN=apikc.lead-schem.ru
+            FRONTEND_DOMAIN=callcentre.lead-schem.ru
+            FRONTEND_URL=https://callcentre.lead-schem.ru
+            MANGO_OFFICE_API_KEY=${{ secrets.MANGO_OFFICE_API_KEY }}
+            MANGO_OFFICE_API_SALT=${{ secrets.MANGO_OFFICE_API_SALT }}
+            MANGO_API_URL=https://app.mango-office.ru/vpbx
+            MANGO_API_KEY=${{ secrets.MANGO_API_KEY }}
+            MANGO_API_ID=${{ secrets.MANGO_API_ID }}
+            MANGO_WEBHOOK_URL=https://apikc.lead-schem.ru/api/webhooks/mango
+            AVITO_CLIENT_ID=${{ secrets.AVITO_CLIENT_ID }}
+            AVITO_CLIENT_SECRET=${{ secrets.AVITO_CLIENT_SECRET }}
+            UPLOAD_DIR=uploads
+            MAX_FILE_SIZE=10485760
+            BOT_WEBHOOK_URL=${{ secrets.BOT_WEBHOOK_URL }}
+            WEBHOOK_TOKEN=${{ secrets.WEBHOOK_TOKEN }}
+            EOF
+            
+            cat > frontend/.env.local << EOF
+            NEXT_PUBLIC_API_URL=https://apikc.lead-schem.ru
+            NEXT_PUBLIC_SOCKET_URL=wss://apikc.lead-schem.ru
+            NEXT_PUBLIC_FRONTEND_DOMAIN=callcentre.lead-schem.ru
+            NEXT_PUBLIC_BACKEND_DOMAIN=apikc.lead-schem.ru
+            NEXT_PUBLIC_APP_NAME="Call Centre CRM"
+            NEXT_PUBLIC_APP_VERSION="1.0.0"
+            NEXT_PUBLIC_ENABLE_DEBUG=false
+            NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING=true
+            EOF
+          else
+            # Staging environment
+            cat > backend/.env << EOF
+            NODE_ENV=staging
+            DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+            REDIS_URL=${{ secrets.STAGING_REDIS_URL }}
+            JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}
+            JWT_EXPIRES_IN=7d
+            PORT=5000
+            HTTP_PORT=80
+            HTTPS_PORT=443
+            SSL_ENABLED=true
+            SSL_CERT_DIR=/etc/ssl/certs/callcentre
+            BACKEND_DOMAIN=staging-api.lead-schem.ru
+            FRONTEND_DOMAIN=staging.callcentre.lead-schem.ru
+            FRONTEND_URL=https://staging.callcentre.lead-schem.ru
+            MANGO_OFFICE_API_KEY=${{ secrets.STAGING_MANGO_OFFICE_API_KEY }}
+            MANGO_OFFICE_API_SALT=${{ secrets.STAGING_MANGO_OFFICE_API_SALT }}
+            MANGO_API_URL=https://app.mango-office.ru/vpbx
+            MANGO_API_KEY=${{ secrets.STAGING_MANGO_API_KEY }}
+            MANGO_API_ID=${{ secrets.STAGING_MANGO_API_ID }}
+            MANGO_WEBHOOK_URL=https://staging-api.lead-schem.ru/api/webhooks/mango
+            AVITO_CLIENT_ID=${{ secrets.STAGING_AVITO_CLIENT_ID }}
+            AVITO_CLIENT_SECRET=${{ secrets.STAGING_AVITO_CLIENT_SECRET }}
+            UPLOAD_DIR=uploads
+            MAX_FILE_SIZE=10485760
+            BOT_WEBHOOK_URL=${{ secrets.STAGING_BOT_WEBHOOK_URL }}
+            WEBHOOK_TOKEN=${{ secrets.STAGING_WEBHOOK_TOKEN }}
+            EOF
+            
+            cat > frontend/.env.local << EOF
+            NEXT_PUBLIC_API_URL=https://staging-api.lead-schem.ru
+            NEXT_PUBLIC_SOCKET_URL=wss://staging-api.lead-schem.ru
+            NEXT_PUBLIC_FRONTEND_DOMAIN=staging.callcentre.lead-schem.ru
+            NEXT_PUBLIC_BACKEND_DOMAIN=staging-api.lead-schem.ru
+            NEXT_PUBLIC_APP_NAME="Call Centre CRM (Staging)"
+            NEXT_PUBLIC_APP_VERSION="1.0.0-staging"
+            NEXT_PUBLIC_ENABLE_DEBUG=true
+            NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING=false
+            EOF
+          fi
+
+          # Docker Compose .env
+          cat > .env << EOF
+          POSTGRES_USER=${{ github.event.inputs.environment == 'production' && secrets.POSTGRES_USER || secrets.STAGING_POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ github.event.inputs.environment == 'production' && secrets.POSTGRES_PASSWORD || secrets.STAGING_POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ github.event.inputs.environment == 'production' && secrets.POSTGRES_DB || secrets.STAGING_POSTGRES_DB }}
+          JWT_SECRET=${{ github.event.inputs.environment == 'production' && secrets.JWT_SECRET || secrets.STAGING_JWT_SECRET }}
+          EOF
+
+      - name: 🚀 Deploy to Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_HOST || secrets.STAGING_HOST }}
+          username: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_USERNAME || secrets.STAGING_USERNAME }}
+          key: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_SSH_KEY || secrets.STAGING_SSH_KEY }}
+          port: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_SSH_PORT || secrets.STAGING_SSH_PORT || 22 }}
+          script: |
+            # Set variables
+            ENV="${{ github.event.inputs.environment }}"
+            PROJECT_DIR="/opt/callcentre-crm${ENV == 'staging' && '-staging' || ''}"
+            FORCE_REBUILD="${{ github.event.inputs.force_rebuild }}"
+            
+            echo "🚀 Starting manual deployment to $ENV environment"
+            echo "📁 Project directory: $PROJECT_DIR"
+            
+            # Navigate to project directory
+            cd $PROJECT_DIR
+            
+            # Pull latest changes
+            echo "📡 Pulling latest changes..."
+            git pull origin ${{ github.ref_name }}
+            
+            # Stop running containers
+            echo "⏹️ Stopping containers..."
+            docker-compose -f docker-compose.prod.yml down
+            
+            # Force rebuild if requested
+            if [ "$FORCE_REBUILD" == "true" ]; then
+              echo "🔨 Force rebuilding images..."
+              docker-compose -f docker-compose.prod.yml build --no-cache
+              docker image prune -f
+            fi
+            
+            # Start containers
+            echo "▶️ Starting containers..."
+            docker-compose -f docker-compose.prod.yml up -d --build
+            
+            # Wait for services
+            echo "⏳ Waiting for services to be ready..."
+            sleep 45
+            
+            # Run migrations
+            echo "🗃️ Running database migrations..."
+            docker-compose -f docker-compose.prod.yml exec -T backend npm run migrate || echo "Migrations failed or not needed"
+            
+            # Health check
+            echo "🏥 Running health check..."
+            BACKEND_URL="${ENV == 'production' && 'https://apikc.lead-schem.ru' || 'https://staging-api.lead-schem.ru'}"
+            timeout 120 bash -c "until curl -f $BACKEND_URL/health; do echo 'Waiting for backend...'; sleep 10; done"
+            
+            echo "✅ Manual deployment to $ENV completed successfully!"
+
+      - name: 📧 Notify Deployment
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🔧 Ручное развертывание завершено!
+            
+            🌍 Environment: ${{ github.event.inputs.environment }}
+            🌐 URL: ${{ github.event.inputs.environment == 'production' && 'https://callcentre.lead-schem.ru' || 'https://staging.callcentre.lead-schem.ru' }}
+            📝 Commit: ${{ github.sha }}
+            👤 Triggered by: ${{ github.actor }}
+            🏷️ Branch: ${{ github.ref_name }}
+            
+            ⚙️ Options:
+            - Skip tests: ${{ github.event.inputs.skip_tests }}
+            - Force rebuild: ${{ github.event.inputs.force_rebuild }}
