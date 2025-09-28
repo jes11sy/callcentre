@@ -43,5 +43,5 @@ jobs:
             # Bring up stack
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-            # Quick health check
-            curl -fsS https://apikc.lead-schem.ru/api/health -k || (docker logs --tail=200 callcentre-backend; exit 1)
+            # Quick health check (local loopback with Host header)
+            curl -fsS -k -H "Host: apikc.lead-schem.ru" https://127.0.0.1/api/health || (docker logs --tail=200 callcentre-backend; exit 1)
