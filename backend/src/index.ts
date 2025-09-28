@@ -213,12 +213,10 @@ const startServer = async () => {
         logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       });
       
-      // Запускаем HTTP сервер на порту 80 для редиректа
-      if (process.env.NODE_ENV === 'production') {
-        server.listen(80, () => {
-          logger.info(`🔄 HTTP Server running on port 80 (redirect to HTTPS)`);
-        });
-      }
+      // Запускаем HTTP сервер на порту HTTP_PORT для внутреннего проксирования через nginx
+      server.listen(HTTP_PORT, () => {
+        logger.info(`🚀 HTTP Server running on port ${HTTP_PORT} (behind nginx)`);
+      });
     } else {
       // Запускаем только HTTP сервер (development)
       server.listen(HTTP_PORT, () => {
