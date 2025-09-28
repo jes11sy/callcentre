@@ -262,6 +262,74 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           EOF
 
+      - name: 🐳 Setup Docker on Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USERNAME }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script: |
+            # Check if Docker is installed
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              
+              # Update system
+              apt-get update
+              apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+              
+              # Add Docker GPG key
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+              
+              # Add Docker repository
+              echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+              
+              # Install Docker
+              apt-get update
+              apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+              
+              # Start and enable Docker
+              systemctl start docker
+              systemctl enable docker
+              
+              # Add current user to docker group
+              usermod -aG docker $USER
+              
+              echo "Docker installed successfully"
+            else
+              echo "Docker is already installed"
+            fi
+            
+            # Check if Docker Compose is installed
+            if ! command -v docker-compose &> /dev/null; then
+              echo "Installing Docker Compose..."
+              curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              chmod +x /usr/local/bin/docker-compose
+              echo "Docker Compose installed successfully"
+            else
+              echo "Docker Compose is already installed"
+            fi
+
+      - name: 📂 Setup Project Directory
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USERNAME }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script: |
+            # Create project directory
+            mkdir -p /opt/callcentre-crm
+            cd /opt/callcentre-crm
+            
+            # Clone repository if not exists
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/jes11sy/callcentre.git .
+            fi
+            
+            # Set proper permissions
+            chown -R $USER:$USER /opt/callcentre-crm
+
       - name: 🚀 Deploy to Production Server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -277,7 +345,7 @@ jobs:
             git pull origin main
             
             # Stop running containers
-            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml down || true
             
             # Remove old images
             docker image prune -f

@@ -1,23 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: callcentre-postgres
-    environment:
-      POSTGRES_DB: callcentre_crm
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    networks:
-      - callcentre-network
-
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -39,7 +22,7 @@ services:
     container_name: callcentre-backend
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/callcentre_crm
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
       SSL_ENABLED: true
@@ -58,7 +41,6 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - postgres
       - redis
     restart: unless-stopped
     networks:
@@ -103,7 +85,6 @@ services:
       - callcentre-network
 
 volumes:
-  postgres_data:
   redis_data:
   backend_uploads:
   backend_logs:

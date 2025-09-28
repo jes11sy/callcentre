@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     // Отключаем проверки TypeScript во время production билда
     ignoreBuildErrors: true,
   },
+  output: 'standalone',
   async rewrites() {
     return [
       {
