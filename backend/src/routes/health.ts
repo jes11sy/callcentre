@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import net from 'net';
+import { URL } from 'url';
 import { logger } from '../config/logger';
 import { prisma } from '../config/database';
 import { getSSLConfig } from '../config/ssl';
@@ -57,7 +59,84 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Redis connectivity check (if available)
     let redisStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
-    // Note: Add Redis client check here if needed
+    try {
+      const redisUrlString = process.env.REDIS_URL || 'redis://redis:6379';
+      const parsed = new URL(redisUrlString);
+      const redisHost = parsed.hostname || 'redis';
+      const redisPort = Number(parsed.port) || 6379;
+      const redisPassword = decodeURIComponent(parsed.password || process.env.REDIS_PASSWORD || '');
+
+      const sendCommand = (socket: net.Socket, parts: string[]): void => {
+        const bulk = parts
+          .map((p) => `$${Buffer.byteLength(p)}\r\n${p}\r\n`)
+          .join('');
+        const payload = `*${parts.length}\r\n${bulk}`;
+        socket.write(payload);
+      };
+
+      const checkRedis = async (): Promise<'connected' | 'disconnected' | 'error'> => {
+        return await new Promise((resolve) => {
+          const socket = net.createConnection({ host: redisHost, port: redisPort });
+          let buffer = '';
+          let authed = false;
+          let finished = false;
+
+          const cleanup = (status: 'connected' | 'disconnected' | 'error') => {
+            if (finished) return;
+            finished = true;
+            try { socket.destroy(); } catch {}
+            resolve(status);
+          };
+
+          socket.setTimeout(4000, () => cleanup('error'));
+
+          socket.on('error', () => cleanup('error'));
+
+          socket.on('connect', () => {
+            try {
+              if (redisPassword) {
+                sendCommand(socket, ['AUTH', redisPassword]);
+              } else {
+                sendCommand(socket, ['PING']);
+              }
+            } catch {
+              cleanup('error');
+            }
+          });
+
+          socket.on('data', (data) => {
+            buffer += data.toString();
+
+            if (!authed && redisPassword) {
+              if (buffer.startsWith('+OK')) {
+                authed = true;
+                buffer = '';
+                sendCommand(socket, ['PING']);
+                return;
+              }
+              if (buffer.startsWith('-ERR') || buffer.startsWith('-NOAUTH')) {
+                return cleanup('error');
+              }
+            } else {
+              if (buffer.includes('+PONG')) {
+                return cleanup('connected');
+              }
+              if (buffer.startsWith('-ERR') || buffer.startsWith('-NOAUTH')) {
+                return cleanup('error');
+              }
+            }
+          });
+        });
+      };
+
+      redisStatus = await checkRedis();
+      if (redisStatus !== 'connected') {
+        errors.push('Redis connectivity issue');
+      }
+    } catch (e) {
+      redisStatus = 'error';
+      errors.push(`Redis check failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
 
     // Memory usage
     const memUsage = process.memoryUsage();
