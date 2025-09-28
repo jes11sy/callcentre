@@ -5,7 +5,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: callcentre-redis
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     ports:
@@ -13,6 +13,11 @@ services:
     restart: unless-stopped
     networks:
       - callcentre-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a $REDIS_PASSWORD ping | grep PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
 
   # Backend API
   backend:
@@ -23,7 +28,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:-postgresql://gen_user:j7X_S9mznbdGHc9P@5.129.247.54:5432/default_db}
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET:-ff1ebf6b64951141ff4d0a4de1999b284e077eef9a4cc3c1d68e4cad222b4f7b}
       SSL_ENABLED: true
       SSL_CERT_DIR: /etc/ssl/certs/callcentre
