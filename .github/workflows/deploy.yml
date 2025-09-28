@@ -1,3 +1,51 @@
+name: Deploy (production)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USERNAME }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            sudo mkdir -p /opt/callcentre-crm
+            sudo chown $USER:$USER /opt/callcentre-crm || true
+            cd /opt/callcentre-crm
+
+            if [ ! -d .git ]; then
+              git clone https://github.com/${{ github.repository }} . || true
+            fi
+            git fetch --all -p || true
+            git checkout main
+            git reset --hard ${{ github.sha }}
+
+            # Write production env (read from GitHub Secrets)
+            cat > .env << 'EOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            EOF
+
+            # Bring up stack
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            # Quick health check
+            curl -fsS https://apikc.lead-schem.ru/api/health -k || (docker logs --tail=200 callcentre-backend; exit 1)
+
 name: 🚀 Deploy Call Centre CRM
 
 on:
