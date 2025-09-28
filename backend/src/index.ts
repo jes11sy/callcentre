@@ -68,8 +68,10 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy for proper IP addresses
 app.set('trust proxy', 1);
 
-// HTTPS redirect middleware (должен быть первым)
-app.use(httpsRedirectMiddleware);
+// HTTPS redirect middleware (только если SSL включен)
+if (sslConfig.enabled) {
+  app.use(httpsRedirectMiddleware);
+}
 
 // Custom security headers
 app.use(securityHeadersMiddleware);
