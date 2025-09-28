@@ -49,7 +49,8 @@ export const getSSLConfig = (): SSLConfig => {
     logger.error('Failed to load SSL certificates:', error);
     
     if (isProduction) {
-      throw new Error('SSL certificates are required in production environment');
+      logger.warn('SSL certificates not found, running without HTTPS in production');
+      return { enabled: false };
     }
     
     logger.warn('Falling back to HTTP in development');

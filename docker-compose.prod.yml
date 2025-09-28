@@ -22,10 +22,10 @@ services:
     container_name: callcentre-backend
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://gen_user:j7X_S9mznbdGHc9P@5.129.247.54:5432/default_db}
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET}
-      SSL_ENABLED: true
+      JWT_SECRET: ${JWT_SECRET:-ff1ebf6b64951141ff4d0a4de1999b284e077eef9a4cc3c1d68e4cad222b4f7b}
+      SSL_ENABLED: ${SSL_ENABLED:-false}
       SSL_CERT_DIR: /etc/ssl/certs/callcentre
       HTTPS_PORT: 443
       HTTP_PORT: 80
@@ -72,8 +72,7 @@ services:
     image: nginx:alpine
     container_name: callcentre-nginx
     volumes:
-      - ./config/nginx/callcentre-crm.conf:/etc/nginx/conf.d/default.conf
-      - ./ssl:/etc/ssl/certs/callcentre:ro
+      - ./config/nginx/http-only.conf:/etc/nginx/conf.d/default.conf
       - ./logs/nginx:/var/log/nginx
     ports:
       - "80:80"

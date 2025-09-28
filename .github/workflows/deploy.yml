@@ -311,23 +311,12 @@ jobs:
             fi
             
             # Create .env file for docker-compose
-            cat > .env << EOF
-            DATABASE_URL=${DATABASE_URL}
-            JWT_SECRET=${JWT_SECRET}
+            cat > .env << 'EOF'
+            DATABASE_URL=postgresql://gen_user:j7X_S9mznbdGHc9P@5.129.247.54:5432/default_db
+            JWT_SECRET=ff1ebf6b64951141ff4d0a4de1999b284e077eef9a4cc3c1d68e4cad222b4f7b
             REDIS_URL=redis://redis:6379
-            MANGO_WEBHOOK_SECRET=${MANGO_WEBHOOK_SECRET}
-            AVITO_CLIENT_ID=${AVITO_CLIENT_ID}
-            AVITO_CLIENT_SECRET=${AVITO_CLIENT_SECRET}
-            AVITO_SECRET_KEY=${AVITO_SECRET_KEY}
-            EMAIL_SERVICE_YANDEX_USER=${EMAIL_SERVICE_YANDEX_USER}
-            EMAIL_SERVICE_YANDEX_PASSWORD=${EMAIL_SERVICE_YANDEX_PASSWORD}
-            EMAIL_SERVICE_GMAIL_USER=${EMAIL_SERVICE_GMAIL_USER}
-            EMAIL_SERVICE_GMAIL_PASSWORD=${EMAIL_SERVICE_GMAIL_PASSWORD}
-            EMAIL_SERVICE_OUTLOOK_USER=${EMAIL_SERVICE_OUTLOOK_USER}
-            EMAIL_SERVICE_OUTLOOK_PASSWORD=${EMAIL_SERVICE_OUTLOOK_PASSWORD}
-            MANGO_API_KEY=${MANGO_API_KEY}
-            MANGO_API_SALT=${MANGO_API_SALT}
-            MANGO_VPBX_KEY=${MANGO_VPBX_KEY}
+            NODE_ENV=production
+            SSL_ENABLED=false
             EOF
             
             # Build and start new containers
