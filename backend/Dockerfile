@@ -1,14 +1,17 @@
 # Dockerfile для backend
 FROM node:18-alpine
 
+# Устанавливаем OpenSSL для Prisma
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Копируем package.json и package-lock.json
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Устанавливаем зависимости
-RUN npm ci --only=production
+# Устанавливаем ВСЕ зависимости для сборки
+RUN npm ci
 
 # Генерируем Prisma клиент
 RUN npx prisma generate
@@ -18,6 +21,9 @@ COPY . .
 
 # Собираем приложение
 RUN npm run build
+
+# Удаляем dev зависимости после сборки
+RUN npm ci --only=production && npm cache clean --force
 
 # Создаем пользователя для безопасности
 RUN addgroup -g 1001 -S nodejs
