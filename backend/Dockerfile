@@ -1,4 +1,5 @@
 # Dockerfile для backend
+# Try alternative registries to avoid Docker Hub rate limits
 FROM node:18-alpine
 
 # Устанавливаем OpenSSL для Prisma

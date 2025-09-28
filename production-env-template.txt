@@ -1,46 +1,72 @@
-# Production Environment Variables для GitHub Secrets
-# Скопируй эти значения в GitHub Secrets на https://github.com/jes11sy/callcentre/settings/secrets/actions
+# =====================================================
+# GITHUB SECRETS FOR CI/CD DEPLOYMENT
+# Add these secrets to your GitHub repository:
+# Settings → Secrets and variables → Actions → Repository secrets
+# =====================================================
 
-# 🔥 ВАЖНО: С Prisma НЕ нужен отдельный SQL скрипт! 
-# Prisma сама создаст таблицы через миграции
+# =====================================================
+# SERVER CONNECTION
+# =====================================================
+PRODUCTION_HOST=92.51.22.226
+PRODUCTION_USERNAME=root
+PRODUCTION_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
+your_private_ssh_key_content_here
+-----END OPENSSH PRIVATE KEY-----
 
-# ============= DATABASE =============
+# Optional: SSH port (default is 22)
+PRODUCTION_SSH_PORT=22
+
+# =====================================================
+# DOCKER HUB CREDENTIALS (to avoid rate limits)
+# =====================================================
+DOCKER_USERNAME=your_docker_hub_username
+DOCKER_PASSWORD=your_docker_hub_password_or_token
+
+# =====================================================
+# DATABASE CONFIGURATION
+# =====================================================
 DATABASE_URL=postgresql://gen_user:j7X_S9mznbdGHc9P@5.129.247.54:5432/default_db
-POSTGRES_USER=gen_user
-POSTGRES_PASSWORD=j7X_S9mznbdGHc9P
-POSTGRES_DB=default_db
+
+# =====================================================
+# APPLICATION SECRETS
+# =====================================================
+JWT_SECRET=your_super_secure_jwt_secret_here_min_32_chars
+
+# =====================================================
+# REDIS CONFIGURATION
+# =====================================================
 REDIS_URL=redis://redis:6379
 
-# ============= PRODUCTION SERVER =============
-# ВАЖНО: Замени на данные своего продакшн сервера
-PRODUCTION_HOST=your_production_server_ip
-PRODUCTION_USERNAME=deploy
-PRODUCTION_SSH_PORT=22
-PRODUCTION_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
-your_private_ssh_key_here
------END OPENSSH PRIVATE KEY-----
+# =====================================================
+# MANGO OFFICE CONFIGURATION  
+# =====================================================
+MANGO_API_KEY=your_mango_api_key
+MANGO_API_SALT=your_mango_api_salt
+MANGO_VPBX_KEY=your_mango_vpbx_key
+MANGO_WEBHOOK_SECRET=your_webhook_secret
 
-# ============= SSL & DOMAINS =============
-SSL_EMAIL=your@email.com
+# =====================================================
+# AVITO API CONFIGURATION
+# =====================================================
+AVITO_CLIENT_ID=your_avito_client_id
+AVITO_CLIENT_SECRET=your_avito_client_secret
+AVITO_SECRET_KEY=your_avito_secret_key
+
+# =====================================================
+# EMAIL SERVICES CONFIGURATION
+# =====================================================
+EMAIL_SERVICE_YANDEX_USER=your_yandex_email@yandex.ru
+EMAIL_SERVICE_YANDEX_PASSWORD=your_yandex_app_password
+
+EMAIL_SERVICE_GMAIL_USER=your_gmail@gmail.com
+EMAIL_SERVICE_GMAIL_PASSWORD=your_gmail_app_password
+
+EMAIL_SERVICE_OUTLOOK_USER=your_outlook@outlook.com
+EMAIL_SERVICE_OUTLOOK_PASSWORD=your_outlook_app_password
+
+# =====================================================
+# SSL & DOMAIN CONFIGURATION
+# =====================================================
 BACKEND_DOMAIN=apikc.lead-schem.ru
 FRONTEND_DOMAIN=callcentre.lead-schem.ru
-SSL_PATH=/etc/ssl/certs
-
-# ============= SECURITY =============
-# Сгенерируй безопасные ключи:
-JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long-please
-ENCRYPTION_KEY=another-32-character-encryption-key-for-security
-
-# ============= API KEYS =============
-AVITO_API_KEY=your_avito_api_key_if_needed
-
-# ============= NOTIFICATIONS =============
-SLACK_WEBHOOK=https://hooks.slack.com/services/your/webhook/url
-EMAIL_PASSWORD=your_email_app_password
-
-# ============= STAGING (Опционально) =============
-STAGING_HOST=your_staging_server_ip
-STAGING_USERNAME=deploy  
-STAGING_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
-staging_private_key_here
------END OPENSSH PRIVATE KEY-----
+SSL_EMAIL=your_email@domain.com
