@@ -43,5 +43,17 @@ jobs:
             # Bring up stack
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-            # Quick health check (local loopback with Host header)
-            curl -fsS -k -H "Host: apikc.lead-schem.ru" https://127.0.0.1/api/health || (docker logs --tail=200 callcentre-backend; exit 1)
+            # Health check with retries (allow containers to warm up)
+            tries=0
+            until curl -fsS -k -H "Host: apikc.lead-schem.ru" https://127.0.0.1/api/health >/dev/null 2>&1; do
+              tries=$((tries+1))
+              if [ $tries -ge 24 ]; then
+                echo "Health check failed after $tries attempts"
+                docker logs --tail=200 callcentre-backend || true
+                docker logs --tail=200 callcentre-nginx || true
+                exit 1
+              fi
+              echo "Waiting for services... attempt $tries"
+              sleep 5
+            done
+            echo "Health check passed"
