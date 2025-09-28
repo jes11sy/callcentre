@@ -37,9 +37,9 @@ services:
       - ./ssl:/etc/ssl/certs/callcentre:ro
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
-    ports:
-      - "80:80"
-      - "443:443"
+    # Backend внутренний порт, без внешнего доступа
+    expose:
+      - "5000"
     depends_on:
       - redis
     restart: unless-stopped
@@ -58,8 +58,9 @@ services:
       NEXT_PUBLIC_SOCKET_URL: wss://apikc.lead-schem.ru
       NEXT_PUBLIC_FRONTEND_DOMAIN: callcentre.lead-schem.ru
       NEXT_PUBLIC_BACKEND_DOMAIN: apikc.lead-schem.ru
-    ports:
-      - "3000:3000"
+    # Frontend внутренний порт, проксируется через nginx
+    expose:
+      - "3000"
     depends_on:
       - backend
     restart: unless-stopped
