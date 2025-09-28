@@ -15,10 +15,10 @@ export interface SSLConfig {
  */
 export const getSSLConfig = (): SSLConfig => {
   const isProduction = process.env.NODE_ENV === 'production';
-  const sslEnabled = process.env.SSL_ENABLED === 'true' || isProduction;
+  const sslEnabled = process.env.SSL_ENABLED === 'true';
 
   if (!sslEnabled) {
-    logger.info('SSL disabled for development environment');
+    logger.info('SSL explicitly disabled via SSL_ENABLED=false');
     return { enabled: false };
   }
 
