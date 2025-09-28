@@ -52,11 +52,12 @@ jobs:
             # Pull latest changes
             git pull origin main
             
-            # Stop running containers
-            docker-compose -f docker-compose.prod.yml down || true
+            # Stop running containers and remove volumes
+            docker-compose -f docker-compose.prod.yml down -v || true
             
-            # Remove old images to free up space
-            docker image prune -af
+            # Remove EVERYTHING - containers, images, volumes, networks
+            docker system prune -af
+            docker volume prune -af
             docker builder prune -af
             
             # Create .env file for docker-compose
