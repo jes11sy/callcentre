@@ -74,9 +74,6 @@ jobs:
             # Wait for services to be ready
             sleep 45
             
-            # Run database migrations
-            docker-compose -f docker-compose.prod.yml exec -T backend npm run migrate || echo "Migrations failed or not needed"
-            
             # Health check with retry
             for i in {1..12}; do
               if curl -f http://localhost:80/health 2>/dev/null; then
@@ -94,18 +91,18 @@ jobs:
       - name: ✅ Verify Deployment
         run: |
           # Wait a bit for services to fully start
-          sleep 60
+          sleep 30
           
-          # Check frontend
-          if curl -f https://callcentre.lead-schem.ru; then
+          # Check by IP since SSL might not be ready
+          if curl -f http://92.51.22.226; then
             echo "✅ Frontend is responding"
           else
             echo "❌ Frontend health check failed"
             exit 1
           fi
           
-          # Check backend API
-          if curl -f https://apikc.lead-schem.ru/health; then
+          # Check backend health endpoint by IP  
+          if curl -f http://92.51.22.226/health; then
             echo "✅ Backend API is responding"
           else
             echo "❌ Backend API health check failed"

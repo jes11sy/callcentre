@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "create-admin": "ts-node src/scripts/createAdmin.ts"
   },
