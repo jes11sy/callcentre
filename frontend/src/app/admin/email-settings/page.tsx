@@ -255,7 +255,7 @@ export default function EmailSettingsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout variant="admin" requiredRole="admin">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="ml-2">Загрузка настроек...</span>
@@ -265,7 +265,7 @@ export default function EmailSettingsPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout variant="admin" requiredRole="admin">
       <div className="space-y-6">
         {/* Заголовок */}
         <div className="flex items-center justify-between">

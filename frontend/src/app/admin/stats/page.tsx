@@ -132,7 +132,7 @@ export default function AdminStatsPage() {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
-      const response = await fetch(`/api/stats/overall?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/stats/overall?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
@@ -155,7 +155,7 @@ export default function AdminStatsPage() {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
-      const response = await fetch(`/api/stats/operator/${selectedOperator}?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/stats/operator/${selectedOperator}?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
