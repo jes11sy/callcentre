@@ -35,7 +35,7 @@ router.post('/from-call', orderValidation.createFromCall, auditLoggers.createOrd
  * @body {string} problem - Описание проблемы
  * @body {number} masterId - ID мастера (опционально)
  */
-router.post('/from-chat', orderValidation.create, auditLoggers.createOrder, orderController.createOrderFromChat);
+router.post('/from-chat', orderValidation.createFromChat, auditLoggers.createOrder, orderController.createOrderFromChat);
 
 /**
  * @route GET /api/orders
