@@ -96,12 +96,17 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('CORS CHECK - Origin:', origin);
+    console.log('CORS CHECK - Allowed origins:', allowedOrigins);
+    
     // Разрешаем запросы без origin (например, мобильные приложения)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
+      console.log('CORS ALLOWED for origin:', origin);
       callback(null, true);
     } else {
+      console.log('CORS BLOCKED for origin:', origin);
       logger.warn(`CORS blocked request from origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }

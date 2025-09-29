@@ -13,6 +13,7 @@ interface LoginRequest {
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('LOGIN REQUEST:', req.body);
     const { login, password, role }: LoginRequest = req.body;
 
     if (!login || !password || !role) {
