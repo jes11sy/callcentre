@@ -362,24 +362,8 @@ export const testAvitoConnection = async (req: Request, res: Response) => {
       proxyConfig
     );
 
-    // Проверяем прокси отдельно, если он настроен
-    let proxyStatus = 'not_checked';
-    if (account.proxyHost) {
-      try {
-        logger.info(`Testing proxy for account ${account.name}: ${account.proxyHost}:${account.proxyPort}`);
-        const proxyTest = await avitoApi.testConnection();
-        if (proxyTest.success) {
-          proxyStatus = 'working';
-          logger.info(`Proxy test successful for account ${account.name}`);
-        } else {
-          proxyStatus = 'failed';
-          logger.warn(`Proxy test failed for account ${account.name}: ${proxyTest.message}`);
-        }
-      } catch (error: any) {
-        proxyStatus = 'failed';
-        logger.error(`Proxy test error for account ${account.name}:`, error.message);
-      }
-    }
+    // Статус прокси определим по результату основного теста
+    let proxyStatus = account.proxyHost ? 'not_checked' : null;
 
     // First do a simple health check
     const healthCheck = await AvitoApiHealthCheck.checkApiAvailability();
@@ -461,7 +445,10 @@ export const testAvitoConnection = async (req: Request, res: Response) => {
     
     connectionResult = await avitoApi.testConnection();
     
-    // Proxy status уже определен выше при проверке прокси
+    // Определяем статус прокси по результату теста
+    if (account.proxyHost) {
+      proxyStatus = connectionResult.success ? 'working' : 'failed';
+    }
 
     // Update account status based on test results
     const updatedAccount = await prisma.avito.update({
@@ -527,6 +514,19 @@ export const syncAvitoAccount = async (req: Request, res: Response) => {
 
     try {
       logger.info(`Starting sync for Avito account ${account.name} (ID: ${account.id})`);
+      logger.info(`Account details:`, {
+        clientId: account.clientId.substring(0, 8) + '...',
+        hasProxy: !!account.proxyHost,
+        proxyHost: account.proxyHost,
+        proxyPort: account.proxyPort,
+        proxyType: account.proxyType
+      });
+
+      // Добавляем небольшую задержку для стабильности прокси
+      if (account.proxyHost) {
+        logger.info('Adding delay before sync for proxy stability...');
+        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000)); // 1-3 секунды
+      }
       
       // Sync account data from Avito API
       const syncData = await avitoApi.syncAccountData();
@@ -558,11 +558,21 @@ export const syncAvitoAccount = async (req: Request, res: Response) => {
         account: updatedAccount,
       });
     } catch (syncError: any) {
+      // Определяем статус прокси при ошибке
+      let proxyStatus = account.proxyHost ? 'not_checked' : null;
+      
+      if (account.proxyHost) {
+        // При ошибке синхронизации считаем что проблема может быть в прокси
+        proxyStatus = 'failed';
+        logger.info(`Proxy marked as failed due to sync error`);
+      }
+
       // Update connection status to disconnected if sync fails
       await prisma.avito.update({
         where: { id: parseInt(id) },
         data: {
           connectionStatus: 'disconnected',
+          proxyStatus: proxyStatus,
           lastSyncAt: new Date(),
         },
       });
@@ -572,11 +582,22 @@ export const syncAvitoAccount = async (req: Request, res: Response) => {
         stack: syncError.stack,
         accountId: account.id,
         clientId: account.clientId,
-        hasProxy: !!account.proxyHost
+        hasProxy: !!account.proxyHost,
+        proxyStatus: proxyStatus,
+        proxyHost: account.proxyHost,
+        proxyPort: account.proxyPort
       });
       
+      // Более информативное сообщение об ошибке
+      let errorMessage = syncError.message;
+      if (account.proxyHost && proxyStatus === 'failed') {
+        errorMessage = `Прокси ${account.proxyHost}:${account.proxyPort} не работает. ${syncError.message}`;
+      } else if (syncError.message.includes('timeout') || syncError.message.includes('ECONNRESET')) {
+        errorMessage = `Нестабильное соединение с прокси. Попробуйте еще раз. ${syncError.message}`;
+      }
+      
       res.status(400).json({
-        error: { message: `Failed to sync account data: ${syncError.message}` },
+        error: { message: `Failed to sync account data: ${errorMessage}` },
       });
     }
   } catch (error: any) {

@@ -1164,29 +1164,31 @@ export class AvitoApiService {
       return result;
     }
 
-    // Проверяем прокси перед синхронизацией, если он настроен
-    if (this.proxyConfig) {
-      logger.info('Testing proxy before account sync');
-      const proxyTest = await this.testProxyConnection();
-      if (!proxyTest.success) {
-        logger.error('Proxy test failed, cannot sync without proxy');
-        throw new Error(`Прокси не работает: ${proxyTest.message}. Необходимо настроить рабочий прокси для безопасности аккаунтов.`);
+    // Просто проверяем доступ к Авито API (с прокси или без)
+    try {
+      if (this.proxyConfig) {
+        logger.info(`Using proxy: ${this.proxyConfig.host}:${this.proxyConfig.port} (${this.proxyConfig.protocol})`);
+      } else {
+        logger.info('Using direct connection to Avito API');
       }
-      logger.info('Proxy test successful, proceeding with account sync (proxy already configured)');
       
-      // Дополнительная проверка: убеждаемся что прокси не блокирует Авито API
-      try {
-        // Простая проверка получения токена
-        await this.refreshToken();
-        logger.info('Proxy allows Avito API access, proceeding with sync');
-      } catch (tokenError: any) {
-        if (tokenError.message.includes('блокирует запросы к Авито API')) {
-          logger.error('=== PROXY BLOCKS AVITO API DURING SYNC ===');
-          throw new Error(tokenError.message);
-        }
-        // Для других ошибок токена просто логируем предупреждение
-        logger.warn('Token refresh warning during sync:', tokenError.message);
+      // Проверяем получение токена - это единственный реальный тест
+      await this.refreshToken();
+      logger.info('Avito API access confirmed, proceeding with sync');
+    } catch (tokenError: any) {
+      logger.error('Avito API access failed:', {
+        message: tokenError.message,
+        response: tokenError.response?.data,
+        status: tokenError.response?.status,
+        hasProxy: !!this.proxyConfig
+      });
+      
+      let errorMessage = `Ошибка доступа к Авито API: ${tokenError.message}`;
+      if (this.proxyConfig && tokenError.message.includes('блокирует запросы к Авито API')) {
+        errorMessage = `Прокси ${this.proxyConfig.host}:${this.proxyConfig.port} блокирует Авито API`;
       }
+      
+      throw new Error(errorMessage);
     }
 
     const result = {
