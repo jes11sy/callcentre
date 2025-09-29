@@ -2,10 +2,36 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { XCircle, AlertTriangle, Phone, MessageSquare, Clock } from 'lucide-react';
+import { XCircle, AlertTriangle, Phone, MessageSquare, Clock, Wrench, DollarSign, Car } from 'lucide-react';
 
 export default function NonOrdersPage() {
   const nonOrderReasons = [
+    {
+      category: 'Техника и проблемы которые мы НЕ решаем',
+      icon: Wrench,
+      reasons: [
+        {
+          title: 'Не выкупаем технику',
+          description: 'Мы не занимаемся выкупом техники у клиентов',
+          action: 'Вежливо объяснить, что мы не выкупаем технику, предложить другие услуги'
+        },
+        {
+          title: 'Не ездим только ради диагностики',
+          description: 'Не выезжаем только для диагностики без последующего ремонта',
+          action: 'Объяснить, что диагностика бесплатна только при заказе ремонта'
+        },
+        {
+          title: 'Не ремонтируем/меняем матрицы',
+          description: 'Не занимаемся ремонтом и заменой матриц экранов',
+          action: 'Объяснить, что мы не работаем с матрицами, предложить другие услуги'
+        },
+        {
+          title: 'Не ремонтируем мелкую бытовую технику',
+          description: 'Не ремонтируем обычные пылесосы, сушилки для овощей, тостеры и прочую мелочовку',
+          action: 'Объяснить, что мы не занимаемся мелкой бытовой техникой, предложить крупную технику'
+        }
+      ]
+    },
     {
       category: 'Технические причины',
       icon: AlertTriangle,
@@ -139,6 +165,47 @@ export default function NonOrdersPage() {
             <div className="flex items-center space-x-2">
               <XCircle className="h-4 w-4 text-red-600" />
               <span>При грубом поведении - завершить разговор, не отвечать грубостью</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2 text-red-800">
+            <Badge variant="destructive">КРИТИЧЕСКИ ВАЖНО</Badge>
+            <span>Что мы НЕ делаем</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3">
+            <div className="flex items-center space-x-3">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <div className="font-semibold text-red-800">Не выкупаем технику</div>
+                <div className="text-sm text-red-700">Мы не занимаемся выкупом техники у клиентов</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <div className="font-semibold text-red-800">Не ездим только ради диагностики</div>
+                <div className="text-sm text-red-700">Диагностика бесплатна только при заказе ремонта</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <div className="font-semibold text-red-800">Не ремонтируем/меняем матрицы</div>
+                <div className="text-sm text-red-700">Не работаем с матрицами экранов</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <div className="font-semibold text-red-800">Не ремонтируем мелкую бытовую технику</div>
+                <div className="text-sm text-red-700">Пылесосы, сушилки для овощей, тостеры и прочая мелочовка</div>
+              </div>
             </div>
           </div>
         </CardContent>
