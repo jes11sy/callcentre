@@ -440,6 +440,6 @@ async function prepareCallData(data: {
     operatorId: data.operatorId,
     status: data.status as any,
     mangoCallId: data.mangoCallId,
-    dateCreate: new Date()
+    dateCreate: new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Moscow"}))
   };
 }

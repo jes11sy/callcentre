@@ -385,7 +385,7 @@ class EmailRecordingService {
    */
   private async updateCallWithRecording(callData: { date: string; time: string; phones: string[] }, s3Key: string, email: any): Promise<void> {
     try {
-      // Создаем диапазон времени для поиска (плюс-минус 2 минуты для более точного сопоставления)
+      // Создаем диапазон времени для поиска (плюс-минус 2 минуты)
       const callTime = new Date(`${callData.date}T${callData.time}`);
       const timeStart = new Date(callTime.getTime() - 2 * 60 * 1000); // -2 минуты
       const timeEnd = new Date(callTime.getTime() + 2 * 60 * 1000); // +2 минуты
