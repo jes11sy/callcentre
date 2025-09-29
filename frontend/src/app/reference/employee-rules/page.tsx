@@ -3,10 +3,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UserCheck, Clock, AlertCircle, CheckCircle, MessageSquare, Phone, Users, FileText, Hash } from 'lucide-react';
+import Header from '@/components/layout/Header';
 
 export default function EmployeeRulesPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <Header variant="operator" />
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-3">
         <UserCheck className="h-8 w-8 text-primary" />
         <div>
@@ -244,6 +247,7 @@ export default function EmployeeRulesPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

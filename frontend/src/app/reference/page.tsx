@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, UserCheck, ClipboardList, DollarSign, XCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import Header from '@/components/layout/Header';
 
 export default function ReferencePage() {
   const referenceSections = [
@@ -50,7 +51,9 @@ export default function ReferencePage() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <Header variant="operator" />
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-3">
         <BookOpen className="h-8 w-8 text-primary" />
         <div>
@@ -123,5 +126,6 @@ export default function ReferencePage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

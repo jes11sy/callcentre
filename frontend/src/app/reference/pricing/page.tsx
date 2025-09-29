@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DollarSign, Wrench, Monitor, Laptop, Smartphone, Tv, Droplets, Zap, Home } from 'lucide-react';
+import Header from '@/components/layout/Header';
 
 export default function PricingPage() {
   const pricingData = [
@@ -206,7 +207,9 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <Header variant="operator" />
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-3">
         <DollarSign className="h-8 w-8 text-primary" />
         <div>
@@ -297,5 +300,6 @@ export default function PricingPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

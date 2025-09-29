@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { XCircle, AlertTriangle, Phone, MessageSquare, Clock, Wrench, DollarSign, Car } from 'lucide-react';
+import Header from '@/components/layout/Header';
 
 export default function NonOrdersPage() {
   const nonOrderReasons = [
@@ -98,7 +99,9 @@ export default function NonOrdersPage() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <Header variant="operator" />
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-3">
         <XCircle className="h-8 w-8 text-primary" />
         <div>
@@ -242,5 +245,6 @@ export default function NonOrdersPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
