@@ -175,22 +175,15 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    // Если дата в формате UTC (с Z), то заменяем Z на +03:00 чтобы показать как московское время
-    let dateStr = dateString;
-    if (dateStr.endsWith('Z')) {
-      dateStr = dateStr.replace('Z', '+03:00');
-    } else if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
-      dateStr = dateStr.replace(' ', 'T') + '+03:00';
-    }
-    
-    const date = new Date(dateStr);
+    const date = new Date(dateString);
     
     return date.toLocaleString('ru-RU', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC'
     });
   };
 

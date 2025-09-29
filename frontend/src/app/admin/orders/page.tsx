@@ -218,20 +218,13 @@ export default function OrdersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    // Если дата в формате UTC (с Z), то заменяем Z на +03:00 чтобы показать как московское время
-    let dateStr = dateString;
-    if (dateStr.endsWith('Z')) {
-      dateStr = dateStr.replace('Z', '+03:00');
-    } else if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
-      dateStr = dateStr.replace(' ', 'T') + '+03:00';
-    }
-    
-    return new Date(dateStr).toLocaleDateString('ru-RU', {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC'
     });
   };
 
