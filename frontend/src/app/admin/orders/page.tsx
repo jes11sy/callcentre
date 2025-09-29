@@ -223,8 +223,7 @@ export default function OrdersPage() {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/Moscow'
+      minute: '2-digit'
     });
   };
 

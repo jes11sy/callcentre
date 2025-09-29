@@ -488,14 +488,12 @@ function OrdersContent() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     
-    // Форматируем дату в московском времени
     return date.toLocaleString('ru-RU', {
       day: '2-digit',
       month: '2-digit', 
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/Moscow'
+      minute: '2-digit'
     });
   };
 
