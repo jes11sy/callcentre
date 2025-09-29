@@ -1626,7 +1626,7 @@ function OrdersContent() {
                           <Label className="text-sm font-medium text-gray-500">Дата встречи</Label>
                           <Input 
                             type="datetime-local"
-                            value={selectedOrder.dateMeeting ? new Date(selectedOrder.dateMeeting).toISOString().slice(0, 16) : ''} 
+                            value={selectedOrder.dateMeeting ? new Date(selectedOrder.dateMeeting).toLocaleString('sv-SE').slice(0, 16) : ''} 
                             onChange={(e) => setSelectedOrder({...selectedOrder, dateMeeting: new Date(e.target.value).toISOString()})}
                             className="mt-1"
                           />
