@@ -169,97 +169,10 @@ export const updateEmailSettings = async (req: Request, res: Response) => {
  */
 export const testEmailConnection = async (req: Request, res: Response) => {
   try {
-    // Получаем настройки из БД
-    const settings = await prisma.emailSettings.findFirst({
-      orderBy: { createdAt: 'desc' }
-    });
-
-    if (!settings) {
-      return res.status(400).json({
-        success: false,
-        message: 'Настройки почты не найдены. Сначала сохраните настройки.'
-      });
-    }
-
-    const config = {
-      host: settings.host,
-      port: settings.port,
-      secure: settings.secure,
-      user: settings.user,
-      password: settings.password,
-      connTimeout: 60000, // 60 секунд
-      authTimeout: 60000, // 60 секунд
-      keepalive: {
-        interval: 10000,
-        idleInterval: 300000,
-        forceNoop: true
-      },
-      // Дополнительные настройки для Timeweb
-      tls: false,
-      tlsOptions: { rejectUnauthorized: false }
-    };
-
-    console.log('🔗 Тест подключения к почте:', {
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      user: config.user
-    });
-
-    // Тестируем подключение
-    const imap = new Imap(config);
-    
-    const testResult = await new Promise<{ success: boolean; message: string }>((resolve) => {
-      let resolved = false;
-
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          imap.end();
-          resolve({
-            success: false,
-            message: 'Таймаут подключения (60 секунд)'
-          });
-        }
-      }, 60000);
-
-      imap.once('ready', () => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          imap.end();
-          console.log('✅ Тест подключения успешен');
-          resolve({
-            success: true,
-            message: 'Подключение к почте успешно'
-          });
-        }
-      });
-
-      imap.once('error', (err: Error) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          console.error('❌ Ошибка теста подключения:', {
-            message: err.message,
-            source: (err as any).source,
-            code: (err as any).code
-          });
-          resolve({
-            success: false,
-            message: `Ошибка подключения: ${err.message}`
-          });
-        }
-      });
-
-      imap.connect();
-    });
-
     res.json({
-      success: testResult.success,
-      message: testResult.message
+      success: false,
+      message: 'Тестирование подключения временно отключено'
     });
-
   } catch (error) {
     console.error('Error testing email connection:', error);
     res.status(500).json({

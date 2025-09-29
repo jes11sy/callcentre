@@ -1,5 +1,4 @@
 import cron from 'node-cron';
-import emailRecordingService from './emailRecordingService';
 
 class CronService {
   private emailCheckJob: cron.ScheduledTask | null = null;
@@ -35,6 +34,7 @@ class CronService {
     this.emailCheckJob = cron.schedule('*/5 * * * *', async () => {
       console.log('⏰ Запуск проверки почты по расписанию...');
       try {
+        const emailRecordingService = require('./emailRecordingService').default;
         await emailRecordingService.checkForNewRecordings();
       } catch (error) {
         console.error('❌ Ошибка при проверке почты по расписанию:', error);
@@ -65,6 +65,7 @@ class CronService {
   async triggerEmailCheck(): Promise<{ success: boolean; message: string; processedCount: number }> {
     try {
       console.log('🔍 Ручной запуск проверки почты...');
+      const emailRecordingService = require('./emailRecordingService').default;
       const result = await emailRecordingService.manualCheck();
       return result;
     } catch (error) {
