@@ -434,7 +434,7 @@ async function prepareCallData(data: {
   return {
     rk: phone?.rk || 'Неизвестно',
     city: phone?.city || operator?.city || 'Неизвестно',
-    avitoName: phone?.avitoName, // Берем из таблицы phones
+    avitoName: phone?.avitoName || undefined, // Берем из таблицы phones (null -> undefined)
     phoneClient: data.phoneClient,
     phoneAts: data.phoneAts,
     operatorId: data.operatorId,
