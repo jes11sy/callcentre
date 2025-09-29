@@ -50,7 +50,7 @@ class S3Service {
    */
   async uploadRecording(filename: string, content: Buffer): Promise<string> {
     try {
-      const key = `recordings/${filename}`;
+      const key = `callcentre/recording_path/${filename}`;
       
       console.log(`☁️ Загружаем файл в S3: ${key}`);
       

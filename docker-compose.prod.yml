@@ -38,10 +38,17 @@ services:
       FRONTEND_DOMAIN: callcentre.lead-schem.ru
       FRONTEND_URL: https://callcentre.lead-schem.ru
       MANGO_WEBHOOK_URL: https://apikc.lead-schem.ru/api/webhooks/mango
+      # S3 настройки
+      S3_ENDPOINT: https://s3.twcstorage.ru
+      S3_BUCKET: f7eead03-crmfiles
+      S3_REGION: ru-1
     volumes:
       - ./ssl:/etc/ssl/certs/callcentre:ro
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
+    secrets:
+      - s3_access_key
+      - s3_secret_key
     # Backend внутренний порт, без внешнего доступа
     expose:
       - "5000"
@@ -98,3 +105,9 @@ volumes:
 networks:
   callcentre-network:
     driver: bridge
+
+secrets:
+  s3_access_key:
+    external: true
+  s3_secret_key:
+    external: true

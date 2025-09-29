@@ -81,7 +81,7 @@ export const getCallRecording = async (req: Request, res: Response) => {
     }
 
     // Проверяем, S3 ключ это или локальный путь
-    const isS3File = call.recordingPath.startsWith('recordings/');
+    const isS3File = call.recordingPath.startsWith('callcentre/recording_path/');
     
     if (isS3File) {
       // Файл в S3 - получаем подписанный URL
