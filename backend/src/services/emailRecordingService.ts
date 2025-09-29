@@ -414,7 +414,7 @@ class EmailRecordingService {
         where: {
           AND: [
             {
-              createdAt: {
+              dateCreate: {
                 gte: timeStart,
                 lte: timeEnd
               }
@@ -444,7 +444,7 @@ class EmailRecordingService {
         where: {
           AND: [
             {
-              createdAt: {
+              dateCreate: {
                 gte: timeStart,
                 lte: timeEnd
               }
@@ -461,7 +461,7 @@ class EmailRecordingService {
           ]
         },
         orderBy: {
-          createdAt: 'asc' // Берем самый ранний звонок
+          dateCreate: 'asc' // Берем самый ранний звонок
         }
       });
 
@@ -474,17 +474,17 @@ class EmailRecordingService {
         console.log(`⚠️ Найдено несколько звонков (${callsWithoutRecordings.length}) в диапазоне времени. Выбираем ближайший по времени.`);
         console.log('Найденные звонки:', callsWithoutRecordings.map(c => ({
           id: c.id,
-          createdAt: c.createdAt,
+          dateCreate: c.dateCreate,
           phoneClient: c.phoneClient,
           phoneAts: c.phoneAts,
-          timeDiff: Math.abs(c.createdAt.getTime() - callTime.getTime())
+          timeDiff: Math.abs(c.dateCreate.getTime() - callTime.getTime())
         })));
       }
 
       // Выбираем звонок, ближайший по времени к времени записи
       const call = callsWithoutRecordings.reduce((closest, current) => {
-        const closestDiff = Math.abs(closest.createdAt.getTime() - callTime.getTime());
-        const currentDiff = Math.abs(current.createdAt.getTime() - callTime.getTime());
+        const closestDiff = Math.abs(closest.dateCreate.getTime() - callTime.getTime());
+        const currentDiff = Math.abs(current.dateCreate.getTime() - callTime.getTime());
         return currentDiff < closestDiff ? current : closest;
       });
 
@@ -498,7 +498,7 @@ class EmailRecordingService {
         }
       });
 
-      console.log(`✅ Запись привязана к звонку ID: ${call.id} (${call.createdAt}), S3 ключ: ${s3Key}`);
+      console.log(`✅ Запись привязана к звонку ID: ${call.id} (${call.dateCreate}), S3 ключ: ${s3Key}`);
     } catch (error) {
       console.error('❌ Ошибка при обновлении БД:', error);
     }
