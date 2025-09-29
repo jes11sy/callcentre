@@ -312,11 +312,11 @@ export default function CreateOrderModal({
                     <SelectTrigger id="typeOrder" className={`h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors ${errors.typeOrder ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Выберите тип заявки" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Впервые">🆕 Впервые</SelectItem>
-                      <SelectItem value="Повтор">🔄 Повтор</SelectItem>
-                      <SelectItem value="Гарантия">🛡️ Гарантия</SelectItem>
-                    </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="Впервые">🆕 Впервые</SelectItem>
+                        <SelectItem value="Повтор">🔄 Повтор</SelectItem>
+                        <SelectItem value="Гарантия">🛡️ Гарантия</SelectItem>
+                      </SelectContent>
                   </Select>
                   {errors.typeOrder && (
                     <p className="text-sm text-red-500 flex items-center gap-1">

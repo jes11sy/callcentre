@@ -89,7 +89,6 @@ export const orderController = {
         });
       }
 
-      // Валидация типов
       const validTypeOrders = ['Впервые', 'Повтор', 'Гарантия'];
       const validTypeEquipments = ['КП', 'БТ', 'МНЧ'];
 
@@ -371,7 +370,6 @@ export const orderController = {
         });
       }
 
-      // Валидация типов
       const validTypeOrders = ['Впервые', 'Повтор', 'Гарантия'];
       const validTypeEquipments = ['КП', 'БТ', 'МНЧ'];
 

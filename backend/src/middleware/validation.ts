@@ -204,7 +204,7 @@ export const orderValidation = {
       .withMessage('Address must be between 3 and 255 characters'),
     body('typeOrder')
       .isIn(['Впервые', 'Повтор', 'Гарантия'])
-      .withMessage('Invalid order type'),
+      .withMessage('Недопустимый тип заявки. Допустимые: Впервые, Повтор, Гарантия'),
     body('typeEquipment')
       .isIn(['КП', 'БТ', 'МНЧ'])
       .withMessage('Invalid equipment type'),

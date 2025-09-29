@@ -75,7 +75,7 @@ interface CreateOrderModalProps {
 
 // Schema for form validation
 const orderSchema = z.object({
-  typeOrder: z.enum(['first_time', 'repeat', 'warranty'], {
+  typeOrder: z.enum(['Впервые', 'Повтор', 'Гарантия'], {
     required_error: 'Выберите тип заявки'
   }),
   clientName: z.string().min(1, 'Введите имя клиента'),
@@ -262,12 +262,10 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
                     <span className="font-medium">{formatDate(call.dateCreate)}</span>
                   </div>
                 </div>
-                {call.avitoName && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-muted-foreground">Авито аккаунт</Label>
-                    <Badge variant="outline">{call.avitoName}</Badge>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-muted-foreground">Авито аккаунт</Label>
+                  <Badge variant="outline">{call.avitoName || 'Не определено'}</Badge>
+                </div>
                 {call.mango?.recordUrl && (
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-muted-foreground">Запись звонка</Label>
@@ -309,11 +307,11 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
                       <SelectTrigger id="typeOrder" className="h-11">
                         <SelectValue placeholder="Выберите тип заявки" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Впервые">Впервые</SelectItem>
-                        <SelectItem value="Повтор">Повтор</SelectItem>
-                        <SelectItem value="Гарантия">Гарантия</SelectItem>
-                      </SelectContent>
+                          <SelectContent>
+                            <SelectItem value="Впервые">Впервые</SelectItem>
+                            <SelectItem value="Повтор">Повтор</SelectItem>
+                            <SelectItem value="Гарантия">Гарантия</SelectItem>
+                          </SelectContent>
                     </Select>
                     {errors.typeOrder && (
                       <p className="text-sm text-red-500 flex items-center gap-1">

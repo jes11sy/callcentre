@@ -323,11 +323,11 @@ export function CreateOrderFromChatModal({ chat, open, onOpenChange, onOrderCrea
                     <SelectTrigger id="typeOrder" className="h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors">
                       <SelectValue placeholder="Выберите тип заявки" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Впервые">🆕 Впервые</SelectItem>
-                      <SelectItem value="Повтор">🔄 Повтор</SelectItem>
-                      <SelectItem value="Гарантия">🛡️ Гарантия</SelectItem>
-                    </SelectContent>
+                          <SelectContent>
+                            <SelectItem value="Впервые">🆕 Впервые</SelectItem>
+                            <SelectItem value="Повтор">🔄 Повтор</SelectItem>
+                            <SelectItem value="Гарантия">🛡️ Гарантия</SelectItem>
+                          </SelectContent>
                   </Select>
                   {errors.typeOrder && (
                     <p className="text-sm text-red-500 flex items-center gap-1">
