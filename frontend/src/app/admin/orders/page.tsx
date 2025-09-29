@@ -218,9 +218,11 @@ export default function OrdersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    // Если дата не содержит информацию о часовом поясе, добавляем +03:00 (МСК)
+    // Если дата в формате UTC (с Z), то заменяем Z на +03:00 чтобы показать как московское время
     let dateStr = dateString;
-    if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+    if (dateStr.endsWith('Z')) {
+      dateStr = dateStr.replace('Z', '+03:00');
+    } else if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
       dateStr = dateStr.replace(' ', 'T') + '+03:00';
     }
     

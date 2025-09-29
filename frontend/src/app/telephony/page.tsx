@@ -1162,7 +1162,9 @@ export default function TelephonyPage() {
                               <p className="font-semibold text-gray-900 text-sm">
                                 {(() => {
                                   let dateStr = order.dateMeeting;
-                                  if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+                                  if (dateStr.endsWith('Z')) {
+                                    dateStr = dateStr.replace('Z', '+03:00');
+                                  } else if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
                                     dateStr = dateStr.replace(' ', 'T') + '+03:00';
                                   }
                                   return new Date(dateStr).toLocaleDateString('ru-RU', {
