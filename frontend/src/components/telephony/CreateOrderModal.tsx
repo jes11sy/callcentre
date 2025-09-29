@@ -336,16 +336,16 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
                   </div>
                 </div>
               </div>
-                {call.mango?.recordUrl && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-muted-foreground">Запись звонка</Label>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-green-600">Доступна</span>
-                    </div>
+
+              {call.mango?.recordUrl && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-muted-foreground">Запись звонка</Label>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm text-green-600">Доступна</span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
