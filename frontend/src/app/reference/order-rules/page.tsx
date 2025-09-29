@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardList, FileText, Clock, CheckCircle, AlertCircle, User, MessageSquare, DollarSign, Phone, Shield } from 'lucide-react';
-import Header from '@/components/layout/Header';
+import { Header } from '@/components/layout/Header';
 
 export default function OrderRulesPage() {
   return (

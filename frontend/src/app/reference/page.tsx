@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, UserCheck, ClipboardList, DollarSign, XCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
+import { Header } from '@/components/layout/Header';
 
 export default function ReferencePage() {
   const referenceSections = [

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UserCheck, Clock, AlertCircle, CheckCircle, MessageSquare, Phone, Users, FileText, Hash } from 'lucide-react';
-import Header from '@/components/layout/Header';
+import { Header } from '@/components/layout/Header';
 
 export default function EmployeeRulesPage() {
   return (

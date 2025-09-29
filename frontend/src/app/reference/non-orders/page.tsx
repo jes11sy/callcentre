@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { XCircle, AlertTriangle, Phone, MessageSquare, Clock, Wrench, DollarSign, Car } from 'lucide-react';
-import Header from '@/components/layout/Header';
+import { Header } from '@/components/layout/Header';
 
 export default function NonOrdersPage() {
   const nonOrderReasons = [
