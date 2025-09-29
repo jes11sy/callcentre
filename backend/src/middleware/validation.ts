@@ -186,6 +186,56 @@ export const callValidation = {
 
 // Order validation rules
 export const orderValidation = {
+  createFromCall: [
+    body('callId')
+      .notEmpty()
+      .withMessage('Call ID is required')
+      .isInt({ min: 1 })
+      .withMessage('Call ID must be a positive integer'),
+    body('rk')
+      .isIn(['Авито', 'Листовка'])
+      .withMessage('Недопустимый РК. Допустимые: Авито, Листовка'),
+    body('avitoName')
+      .optional()
+      .isLength({ max: 100 })
+      .withMessage('Авито аккаунт не должен превышать 100 символов'),
+    body('city')
+      .notEmpty()
+      .withMessage('City is required')
+      .isLength({ min: 2, max: 50 })
+      .withMessage('City must be between 2 and 50 characters'),
+    body('clientName')
+      .notEmpty()
+      .withMessage('Client name is required')
+      .isLength({ min: 2, max: 100 })
+      .withMessage('Client name must be between 2 and 100 characters'),
+    body('address')
+      .notEmpty()
+      .withMessage('Address is required')
+      .isLength({ min: 3, max: 255 })
+      .withMessage('Address must be between 3 and 255 characters'),
+    body('typeOrder')
+      .isIn(['Впервые', 'Повтор', 'Гарантия'])
+      .withMessage('Недопустимый тип заявки. Допустимые: Впервые, Повтор, Гарантия'),
+    body('typeEquipment')
+      .isIn(['КП', 'БТ', 'МНЧ'])
+      .withMessage('Invalid equipment type'),
+    body('problem')
+      .notEmpty()
+      .withMessage('Problem description is required')
+      .isLength({ min: 3, max: 1000 })
+      .withMessage('Problem description must be between 3 and 1000 characters'),
+    body('dateMeeting')
+      .notEmpty()
+      .withMessage('Meeting date is required')
+      .isISO8601()
+      .withMessage('Valid ISO 8601 date format is required'),
+    body('masterId')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Master ID must be a positive integer'),
+    handleValidationErrors
+  ],
   create: [
     body('phone')
       .notEmpty()

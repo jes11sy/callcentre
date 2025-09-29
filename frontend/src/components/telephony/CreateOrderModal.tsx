@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -75,6 +75,11 @@ interface CreateOrderModalProps {
 
 // Schema for form validation
 const orderSchema = z.object({
+  rk: z.enum(['Авито', 'Листовка'], {
+    required_error: 'Выберите РК'
+  }),
+  avitoName: z.string().optional(),
+  city: z.string().min(1, 'Введите город'),
   typeOrder: z.enum(['Впервые', 'Повтор', 'Гарантия'], {
     required_error: 'Выберите тип заявки'
   }),
@@ -102,6 +107,9 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
   } = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
+      rk: 'Авито',
+      avitoName: '',
+      city: '',
       typeOrder: 'Впервые',
       clientName: '',
       address: '',
@@ -113,6 +121,14 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
 
   const watchedValues = watch();
 
+  // Fill form with call data when call changes
+  useEffect(() => {
+    if (call && open) {
+      setValue('rk', call.rk === 'Авито' ? 'Авито' : 'Листовка');
+      setValue('avitoName', call.avitoName || '');
+      setValue('city', call.city || '');
+    }
+  }, [call, open, setValue]);
 
   // Handle form submission
   const onSubmit = async (data: OrderFormData) => {
@@ -123,6 +139,9 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
 
       const orderData = {
         callId: call.id,
+        rk: data.rk,
+        avitoName: data.avitoName,
+        city: data.city,
         typeOrder: data.typeOrder,
         clientName: data.clientName,
         address: data.address,
@@ -223,49 +242,100 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
                 Информация о звонке
               </CardTitle>
               <CardDescription className="text-sm">
-                Данные будут автоматически перенесены в заказ
+                Отредактируйте данные при необходимости
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">РК</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-sm">{call.rk}</Badge>
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* РК */}
+                <div className="space-y-3">
+                  <Label htmlFor="rk" className="text-sm font-semibold">
+                    РК <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={watchedValues.rk}
+                    onValueChange={(value) => setValue('rk', value as any)}
+                  >
+                    <SelectTrigger id="rk" className="h-11">
+                      <SelectValue placeholder="Выберите РК" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Авито">Авито</SelectItem>
+                      <SelectItem value="Листовка">Листовка</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.rk && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <span className="text-red-500">⚠</span>
+                      {errors.rk.message}
+                    </p>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Город</Label>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">{call.city}</span>
-                  </div>
+
+                {/* Авито аккаунт */}
+                <div className="space-y-3">
+                  <Label htmlFor="avitoName" className="text-sm font-semibold">
+                    Авито аккаунт
+                  </Label>
+                  <Input
+                    id="avitoName"
+                    placeholder="Введите название Авито аккаунта"
+                    className="h-11"
+                    {...register('avitoName')}
+                  />
+                  {errors.avitoName && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <span className="text-red-500">⚠</span>
+                      {errors.avitoName.message}
+                    </p>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Телефон клиента</Label>
-                  <div className="flex items-center gap-2">
+
+                {/* Город */}
+                <div className="space-y-3">
+                  <Label htmlFor="city" className="text-sm font-semibold">
+                    Город <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="city"
+                    placeholder="Введите город"
+                    className="h-11"
+                    {...register('city')}
+                  />
+                  {errors.city && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <span className="text-red-500">⚠</span>
+                      {errors.city.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Информация только для чтения */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-muted-foreground">Телефон клиента</Label>
+                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                     <Phone className="h-4 w-4 text-green-500" />
                     <span className="font-mono font-medium text-green-700">{call.phoneClient}</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-muted-foreground">Оператор</Label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                     <User className="h-4 w-4 text-purple-500" />
                     <span className="font-medium">{call.operator.name}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-muted-foreground">Дата звонка</Label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                     <Calendar className="h-4 w-4 text-orange-500" />
                     <span className="font-medium">{formatDate(call.dateCreate)}</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Авито аккаунт</Label>
-                  <Badge variant="outline">{call.avitoName || 'Не определено'}</Badge>
-                </div>
+              </div>
                 {call.mango?.recordUrl && (
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-muted-foreground">Запись звонка</Label>

@@ -18,7 +18,7 @@ const router = Router();
  * @body {string} problem - Описание проблемы
  * @body {number} masterId - ID мастера (опционально)
  */
-router.post('/from-call', orderValidation.create, auditLoggers.createOrder, orderController.createOrderFromCall);
+router.post('/from-call', orderValidation.createFromCall, auditLoggers.createOrder, orderController.createOrderFromCall);
 
 /**
  * @route POST /api/orders/from-chat

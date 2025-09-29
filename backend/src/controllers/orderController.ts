@@ -5,6 +5,9 @@ import { DirectorNotificationService } from '../services/directorNotificationSer
 
 interface CreateOrderFromCallRequest {
   callId: number;
+  rk: 'Авито' | 'Листовка';
+  avitoName?: string;
+  city: string;
   typeOrder: 'Впервые' | 'Повтор' | 'Гарантия';
   clientName: string;
   address: string;
@@ -52,6 +55,9 @@ export const orderController = {
     try {
       const {
         callId,
+        rk,
+        avitoName,
+        city,
         typeOrder,
         clientName,
         address,
@@ -62,7 +68,7 @@ export const orderController = {
       }: CreateOrderFromCallRequest = req.body;
 
       // Валидация обязательных полей
-      if (!callId || !typeOrder || !clientName || !address || !dateMeeting || !typeEquipment || !problem) {
+      if (!callId || !rk || !city || !typeOrder || !clientName || !address || !dateMeeting || !typeEquipment || !problem) {
         return res.status(400).json({
           success: false,
           message: 'Отсутствуют обязательные поля'
@@ -125,9 +131,9 @@ export const orderController = {
       // Создать заказ
       const order = await prisma.order.create({
         data: {
-          rk: call.rk,
-          city: call.city,
-          avitoName: call.avitoName,
+          rk,
+          city,
+          avitoName: avitoName || undefined,
           phone: call.phoneClient,
           typeOrder,
           clientName,
