@@ -1,16 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface SpotifyAudioPlayerProps {
   audioUrl: string;
@@ -23,8 +16,6 @@ export function SpotifyAudioPlayer({ audioUrl, onError, className = '' }: Spotif
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(100);
-  const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,17 +54,7 @@ export function SpotifyAudioPlayer({ audioUrl, onError, className = '' }: Spotif
     };
   }, [audioUrl, onError]);
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = playbackRate;
-    }
-  }, [playbackRate]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -97,9 +78,6 @@ export function SpotifyAudioPlayer({ audioUrl, onError, className = '' }: Spotif
     setCurrentTime(newTime);
   };
 
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0]);
-  };
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -111,7 +89,7 @@ export function SpotifyAudioPlayer({ audioUrl, onError, className = '' }: Spotif
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`flex items-center gap-3 p-3 bg-muted/50 rounded-lg border ${className}`}>
+    <div className={`flex items-center gap-2 p-2 bg-muted/30 rounded border ${className}`}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
       {/* Play/Pause Button */}
@@ -120,19 +98,19 @@ export function SpotifyAudioPlayer({ audioUrl, onError, className = '' }: Spotif
         size="sm"
         onClick={togglePlayPause}
         disabled={isLoading}
-        className="h-8 w-8 p-0"
+        className="h-7 w-7 p-0 flex-shrink-0"
       >
         {isLoading ? (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         ) : isPlaying ? (
-          <Pause className="h-4 w-4" />
+          <Pause className="h-3 w-3" />
         ) : (
-          <Play className="h-4 w-4" />
+          <Play className="h-3 w-3" />
         )}
       </Button>
 
       {/* Progress Bar */}
-      <div className="flex-1 flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 min-w-0">
         <Slider
           value={[progressPercentage]}
           onValueChange={handleSeek}
@@ -143,51 +121,11 @@ export function SpotifyAudioPlayer({ audioUrl, onError, className = '' }: Spotif
         />
         
         {/* Time Display */}
-        <div className="text-sm text-muted-foreground font-mono min-w-[80px]">
-          {formatTime(currentTime)} / {formatTime(duration)}
+        <div className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+          {formatTime(currentTime)}/{formatTime(duration)}
         </div>
       </div>
 
-      {/* Volume Control */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setVolume(volume === 0 ? 100 : 0)}
-          className="h-8 w-8 p-0"
-        >
-          {volume === 0 ? (
-            <VolumeX className="h-4 w-4" />
-          ) : (
-            <Volume2 className="h-4 w-4" />
-          )}
-        </Button>
-        <Slider
-          value={[volume]}
-          onValueChange={handleVolumeChange}
-          max={100}
-          step={1}
-          className="w-16"
-        />
-      </div>
-
-      {/* Playback Speed */}
-      <Select
-        value={playbackRate.toString()}
-        onValueChange={(value) => setPlaybackRate(parseFloat(value))}
-      >
-        <SelectTrigger className="w-16 h-8">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="0.5">0.5x</SelectItem>
-          <SelectItem value="0.75">0.75x</SelectItem>
-          <SelectItem value="1">1x</SelectItem>
-          <SelectItem value="1.25">1.25x</SelectItem>
-          <SelectItem value="1.5">1.5x</SelectItem>
-          <SelectItem value="2">2x</SelectItem>
-        </SelectContent>
-      </Select>
     </div>
   );
 }

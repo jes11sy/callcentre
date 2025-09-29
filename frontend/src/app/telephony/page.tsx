@@ -506,7 +506,7 @@ export default function TelephonyPage() {
           toast.error(error);
           closePlayer();
         }}
-        className="min-w-[400px]"
+        className="min-w-[250px]"
       />
     ) : (
       <div className="flex items-center gap-2">
