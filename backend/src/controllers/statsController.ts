@@ -55,10 +55,10 @@ export const statsController = {
       // Подсчитываем статистику из результата
       const totalCalls = callsStats.reduce((sum, stat) => sum + stat._count.id, 0);
       const acceptedCalls = callsStats
-        .filter(stat => ['completed', 'assigned'].includes(stat.status))
+        .filter(stat => stat.status === 'answered')
         .reduce((sum, stat) => sum + stat._count.id, 0);
       const missedCalls = callsStats
-        .filter(stat => ['missed', 'no_answer'].includes(stat.status))
+        .filter(stat => ['missed', 'no_answer', 'busy'].includes(stat.status))
         .reduce((sum, stat) => sum + stat._count.id, 0);
 
       // Статистика заказов
@@ -237,9 +237,7 @@ export const statsController = {
             gte: start,
             lte: end
           },
-          status: {
-            in: ['completed', 'assigned']
-          }
+          status: 'answered'
         }
       });
 
@@ -250,7 +248,7 @@ export const statsController = {
             lte: end
           },
           status: {
-            in: ['missed', 'no_answer']
+            in: ['missed', 'no_answer', 'busy']
           }
         }
       });
