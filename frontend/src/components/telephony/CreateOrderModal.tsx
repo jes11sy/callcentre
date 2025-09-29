@@ -175,12 +175,15 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('ru-RU', {
+    const date = new Date(dateString);
+    
+    return date.toLocaleString('ru-RU', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Europe/Moscow'
     });
   };
 

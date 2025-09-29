@@ -1355,7 +1355,8 @@ export default function MessagesPage() {
                                 day: '2-digit',
                                 month: '2-digit',
                                 hour: '2-digit',
-                                minute: '2-digit'
+                                minute: '2-digit',
+                                timeZone: 'Europe/Moscow'
                               })}
                             </p>
                           </div>
