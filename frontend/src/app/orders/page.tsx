@@ -666,15 +666,15 @@ function OrdersContent() {
                       const orderTime = new Date(order.dateMeeting);
                       const today = new Date();
                       
-                      // Проверяем, что заявка на сегодня
-                      const isToday = orderTime.getDate() === today.getDate() && 
-                                     orderTime.getMonth() === today.getMonth() && 
-                                     orderTime.getFullYear() === today.getFullYear();
+                      // Проверяем, что заявка на сегодня (используем UTC для корректного сравнения)
+                      const isToday = orderTime.getUTCDate() === today.getDate() && 
+                                     orderTime.getUTCMonth() === today.getMonth() && 
+                                     orderTime.getUTCFullYear() === today.getFullYear();
                       
                       if (!isToday) return false;
                       
-                      const orderHour = orderTime.getHours();
-                      const orderMinute = orderTime.getMinutes();
+                      const orderHour = orderTime.getUTCHours();
+                      const orderMinute = orderTime.getUTCMinutes();
                       return orderHour === hour && orderMinute === minute;
                     }).length || 0;
                     
@@ -702,15 +702,15 @@ function OrdersContent() {
                       const orderTime = new Date(order.dateMeeting);
                       const today = new Date();
                       
-                      // Проверяем, что заявка на сегодня
-                      const isToday = orderTime.getDate() === today.getDate() && 
-                                     orderTime.getMonth() === today.getMonth() && 
-                                     orderTime.getFullYear() === today.getFullYear();
+                      // Проверяем, что заявка на сегодня (используем UTC для корректного сравнения)
+                      const isToday = orderTime.getUTCDate() === today.getDate() && 
+                                     orderTime.getUTCMonth() === today.getMonth() && 
+                                     orderTime.getUTCFullYear() === today.getFullYear();
                       
                       if (!isToday) return false;
                       
-                      const orderHour = orderTime.getHours();
-                      const orderMinute = orderTime.getMinutes();
+                      const orderHour = orderTime.getUTCHours();
+                      const orderMinute = orderTime.getUTCMinutes();
                       return orderHour === hour && orderMinute === minute;
                     }).length || 0;
                     
@@ -738,15 +738,15 @@ function OrdersContent() {
                       const orderTime = new Date(order.dateMeeting);
                       const today = new Date();
                       
-                      // Проверяем, что заявка на сегодня
-                      const isToday = orderTime.getDate() === today.getDate() && 
-                                     orderTime.getMonth() === today.getMonth() && 
-                                     orderTime.getFullYear() === today.getFullYear();
+                      // Проверяем, что заявка на сегодня (используем UTC для корректного сравнения)
+                      const isToday = orderTime.getUTCDate() === today.getDate() && 
+                                     orderTime.getUTCMonth() === today.getMonth() && 
+                                     orderTime.getUTCFullYear() === today.getFullYear();
                       
                       if (!isToday) return false;
                       
-                      const orderHour = orderTime.getHours();
-                      const orderMinute = orderTime.getMinutes();
+                      const orderHour = orderTime.getUTCHours();
+                      const orderMinute = orderTime.getUTCMinutes();
                       return orderHour === hour && orderMinute === minute;
                     }).length || 0;
                     
