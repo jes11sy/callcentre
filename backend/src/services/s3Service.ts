@@ -5,16 +5,12 @@ class S3Service {
   private bucket: string;
 
   constructor() {
-    // Читаем секреты из Docker Secrets или fallback на env
-    const s3AccessKey = this.readSecret('s3_access_key') || process.env.S3_ACCESS_KEY || 'G0Q8KYB00336TBRJ7CLF';
-    const s3SecretKey = this.readSecret('s3_secret_key') || process.env.S3_SECRET_KEY || '1XafQAT9DKRWs4YImAU2XfkX7VAb1LlXDiH2Ks6Y';
-    
     this.bucket = process.env.S3_BUCKET || 'f7eead03-crmfiles';
     
     this.s3 = new AWS.S3({
       endpoint: process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru',
-      accessKeyId: s3AccessKey,
-      secretAccessKey: s3SecretKey,
+      accessKeyId: process.env.S3_ACCESS_KEY || 'G0Q8KYB00336TBRJ7CLF',
+      secretAccessKey: process.env.S3_SECRET_KEY || '1XafQAT9DKRWs4YImAU2XfkX7VAb1LlXDiH2Ks6Y',
       region: process.env.S3_REGION || 'ru-1',
       s3ForcePathStyle: true, // Нужно для совместимости с S3-подобными сервисами
       signatureVersion: 'v4'
@@ -24,25 +20,8 @@ class S3Service {
       endpoint: this.s3.config.endpoint,
       bucket: this.bucket,
       region: this.s3.config.region,
-      accessKeySource: s3AccessKey.startsWith('G0Q8KYB') ? 'default' : 'secret'
+      hasAccessKey: !!process.env.S3_ACCESS_KEY
     });
-  }
-
-  /**
-   * Читает Docker Secret из файла
-   */
-  private readSecret(secretName: string): string | null {
-    try {
-      const fs = require('fs');
-      const secretPath = `/run/secrets/${secretName}`;
-      if (fs.existsSync(secretPath)) {
-        return fs.readFileSync(secretPath, 'utf8').trim();
-      }
-      return null;
-    } catch (error) {
-      console.warn(`⚠️ Не удалось прочитать секрет ${secretName}:`, error);
-      return null;
-    }
   }
 
   /**

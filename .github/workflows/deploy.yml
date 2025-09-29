@@ -60,19 +60,17 @@ jobs:
             docker volume prune -af
             docker builder prune -af
             
-            # Create .env file for docker-compose (original style + Redis secret)
+            # Create .env file for docker-compose (original style + Redis secret + S3)
             cat > .env << 'EOF'
             DATABASE_URL=postgresql://gen_user:j7X_S9mznbdGHc9P@5.129.247.54:5432/default_db
             JWT_SECRET=ff1ebf6b64951141ff4d0a4de1999b284e077eef9a4cc3c1d68e4cad222b4f7b
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+            S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+            S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
             NODE_ENV=production
             SSL_ENABLED=false
             EOF
-            
-            # Create S3 Docker secrets (ignore errors if already exist)
-            echo "${{ secrets.S3_ACCESS_KEY }}" | docker secret create s3_access_key - 2>/dev/null || echo "S3 access key secret already exists"
-            echo "${{ secrets.S3_SECRET_KEY }}" | docker secret create s3_secret_key - 2>/dev/null || echo "S3 secret key secret already exists"
             
             # Build and start new containers
             docker-compose -f docker-compose.prod.yml up -d --build
