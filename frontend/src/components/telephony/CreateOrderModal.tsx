@@ -175,7 +175,13 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Если дата не содержит информацию о часовом поясе, добавляем +03:00 (МСК)
+    let dateStr = dateString;
+    if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      dateStr = dateStr.replace(' ', 'T') + '+03:00';
+    }
+    
+    const date = new Date(dateStr);
     
     return date.toLocaleString('ru-RU', {
       year: 'numeric',

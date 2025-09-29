@@ -218,7 +218,13 @@ export default function OrdersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    // Если дата не содержит информацию о часовом поясе, добавляем +03:00 (МСК)
+    let dateStr = dateString;
+    if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      dateStr = dateStr.replace(' ', 'T') + '+03:00';
+    }
+    
+    return new Date(dateStr).toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

@@ -1351,12 +1351,18 @@ export default function MessagesPage() {
                           <div className="bg-gray-50 rounded p-2">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Дата</p>
                             <p className="font-semibold text-gray-900 text-sm">
-                              {new Date(order.dateMeeting).toLocaleDateString('ru-RU', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {(() => {
+                                let dateStr = order.dateMeeting;
+                                if (!dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+                                  dateStr = dateStr.replace(' ', 'T') + '+03:00';
+                                }
+                                return new Date(dateStr).toLocaleDateString('ru-RU', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                });
+                              })()}
                             </p>
                           </div>
                           <div className="bg-gray-50 rounded p-2">
