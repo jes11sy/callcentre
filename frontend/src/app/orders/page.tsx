@@ -203,7 +203,7 @@ function OrdersContent() {
       });
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/orders?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -245,7 +245,7 @@ function OrdersContent() {
   // Обновление статуса заказа
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const response = await fetch(`/api/orders/${id}/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +276,7 @@ function OrdersContent() {
   // Обновление заказа
   const updateOrderMutation = useMutation({
     mutationFn: async ({ id, orderData }: { id: number; orderData: Partial<Order> }) => {
-      const response = await fetch(`/api/orders/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -312,7 +312,7 @@ function OrdersContent() {
 
   const loadRecording = async (call: any) => {
     try {
-      const response = await fetch(`/api/recordings/call/${call.id}/download`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recordings/call/${call.id}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
@@ -428,7 +428,7 @@ function OrdersContent() {
       const callIdArray = callIds.split(',');
       const calls = await Promise.all(
         callIdArray.map(async (callId) => {
-          const response = await fetch(`/api/calls/${callId}`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/calls/${callId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }

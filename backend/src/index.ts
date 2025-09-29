@@ -58,7 +58,7 @@ const primaryServer = httpsServer || server;
 const io = new Server(primaryServer, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
   }
 });
@@ -107,7 +107,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['X-Total-Count']
 }));
