@@ -1627,7 +1627,12 @@ function OrdersContent() {
                           <Input 
                             type="datetime-local"
                             value={selectedOrder.dateMeeting ? new Date(selectedOrder.dateMeeting).toISOString().slice(0, 16) : ''} 
-                            onChange={(e) => setSelectedOrder({...selectedOrder, dateMeeting: new Date(e.target.value).toISOString()})}
+                            onChange={(e) => {
+                              // Создаем дату из локального времени, но сохраняем как UTC
+                              const localDate = new Date(e.target.value);
+                              const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+                              setSelectedOrder({...selectedOrder, dateMeeting: utcDate.toISOString()});
+                            }}
                             className="mt-1"
                           />
                         </div>
