@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import cronService from '../services/cronService';
 import emailRecordingService from '../services/emailRecordingService';
+import s3Service from '../services/s3Service';
 
 const prisma = new PrismaClient();
 
@@ -79,17 +80,30 @@ export const getCallRecording = async (req: Request, res: Response) => {
       });
     }
 
-    // Проверяем существование файла
-    if (!fs.existsSync(call.recordingPath)) {
-      return res.status(404).json({
-        success: false,
-        message: 'Файл записи не найден на диске'
+    // Проверяем, S3 ключ это или локальный путь
+    const isS3File = call.recordingPath.startsWith('recordings/');
+    
+    if (isS3File) {
+      // Файл в S3 - получаем подписанный URL
+      const signedUrl = await s3Service.getRecordingUrl(call.recordingPath);
+      
+      return res.json({
+        success: true,
+        url: signedUrl,
+        type: 's3'
       });
-    }
+    } else {
+      // Локальный файл - проверяем существование
+      if (!fs.existsSync(call.recordingPath)) {
+        return res.status(404).json({
+          success: false,
+          message: 'Файл записи не найден на диске'
+        });
+      }
 
-    // Отправляем файл для воспроизведения
-    const filename = path.basename(call.recordingPath);
-    const ext = path.extname(filename).toLowerCase();
+      // Отправляем файл для воспроизведения
+      const filename = path.basename(call.recordingPath);
+      const ext = path.extname(filename).toLowerCase();
     
     // Определяем MIME тип по расширению
     let mimeType = 'audio/mpeg';
@@ -128,6 +142,7 @@ export const getCallRecording = async (req: Request, res: Response) => {
       
       const fileStream = fs.createReadStream(call.recordingPath);
       fileStream.pipe(res);
+    }
     }
 
   } catch (error) {

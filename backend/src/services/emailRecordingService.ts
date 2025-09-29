@@ -4,6 +4,7 @@ import { simpleParser } from 'mailparser';
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
+import s3Service from './s3Service';
 
 const prisma = new PrismaClient();
 
@@ -331,32 +332,26 @@ class EmailRecordingService {
    */
   private async saveRecording(callData: { date: string; time: string; phones: string[] }, attachment: any, email: any): Promise<void> {
     try {
-      // Создаем директорию для записей
-      const recordingsDir = path.join(process.cwd(), 'uploads', 'recordings');
-      if (!fs.existsSync(recordingsDir)) {
-        fs.mkdirSync(recordingsDir, { recursive: true });
-      }
-
       // Используем оригинальное имя файла
       const filename = attachment.filename || 'recording.mp3';
-      const filePath = path.join(recordingsDir, filename);
 
-      // Сохраняем файл
-      fs.writeFileSync(filePath, attachment.content);
+      // Загружаем в S3
+      const s3Key = await s3Service.uploadRecording(filename, attachment.content);
+      console.log(`☁️ Файл загружен в S3: ${s3Key}`);
 
-      // Обновляем запись в БД
-      await this.updateCallWithRecording(callData, filePath, email);
+      // Обновляем запись в БД (сохраняем S3 ключ вместо локального пути)
+      await this.updateCallWithRecording(callData, s3Key, email);
 
-      console.log(`💾 Запись сохранена: ${filename}`);
+      console.log(`💾 Запись сохранена в S3: ${filename}`);
     } catch (error) {
-      console.error('❌ Ошибка при сохранении записи:', error);
+      console.error('❌ Ошибка при сохранении записи в S3:', error);
     }
   }
 
   /**
    * Обновляет запись звонка в БД
    */
-  private async updateCallWithRecording(callData: { date: string; time: string; phones: string[] }, filePath: string, email: any): Promise<void> {
+  private async updateCallWithRecording(callData: { date: string; time: string; phones: string[] }, s3Key: string, email: any): Promise<void> {
     try {
       // Создаем диапазон времени для поиска (плюс-минус 2 минуты для более точного сопоставления)
       const callTime = new Date(`${callData.date}T${callData.time}`);
@@ -373,7 +368,7 @@ class EmailRecordingService {
       // Проверяем, не привязан ли уже этот файл к другому звонку
       const existingCallWithSameFile = await prisma.call.findFirst({
         where: {
-          recordingPath: filePath
+          recordingPath: s3Key
         }
       });
 
@@ -465,13 +460,13 @@ class EmailRecordingService {
       await prisma.call.update({
         where: { id: call.id },
         data: {
-          recordingPath: filePath,
+          recordingPath: s3Key,
           recordingProcessedAt: new Date(),
           recordingEmailSent: true
         }
       });
 
-      console.log(`✅ Запись привязана к звонку ID: ${call.id} (${call.createdAt})`);
+      console.log(`✅ Запись привязана к звонку ID: ${call.id} (${call.createdAt}), S3 ключ: ${s3Key}`);
     } catch (error) {
       console.error('❌ Ошибка при обновлении БД:', error);
     }
