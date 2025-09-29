@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,8 +65,23 @@ interface OperatorStats {
 }
 
 export default function StatsPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // Редирект админов на админскую страницу статистики
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      router.push('/admin/stats');
+      return;
+    }
+  }, [user, router]);
+
+  // Не показываем контент для админов
+  if (user && user.role === 'admin') {
+    return null;
+  }
 
   // Устанавливаем даты по умолчанию (последние 30 дней)
   useEffect(() => {

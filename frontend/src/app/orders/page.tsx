@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -120,8 +120,23 @@ const statusColors = {
 // Убираем маппинг - просто отображаем данные из БД
 
 function OrdersContent() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
+
+  // Редирект админов на админскую страницу заказов
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      router.push('/admin/orders');
+      return;
+    }
+  }, [user, router]);
+
+  // Не показываем контент для админов
+  if (user && user.role === 'admin') {
+    return null;
+  }
   const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');

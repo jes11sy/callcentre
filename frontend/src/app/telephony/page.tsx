@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,9 +139,24 @@ const filtersSchema = z.object({
 });
 
 export default function TelephonyPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Редирект админов на админскую страницу телефонии
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      router.push('/admin/telephony');
+      return;
+    }
+  }, [user, router]);
+
+  // Не показываем контент для админов
+  if (user && user.role === 'admin') {
+    return null;
+  }
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
