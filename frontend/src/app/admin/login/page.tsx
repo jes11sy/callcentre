@@ -77,10 +77,6 @@ export default function AdminLoginPage() {
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-gray-100 flex flex-col items-center justify-center p-4">
       {/* Logo Section */}
       <div className="flex flex-col items-center mb-8">
-        <div className="flex items-center gap-4 text-4xl font-bold text-gray-100 mb-2">
-          <Shield className="text-purple-500 text-5xl" />
-          <span>Admin Panel</span>
-        </div>
         <div className="text-gray-400 text-xl font-medium">
           Административная панель CRM
         </div>
@@ -192,39 +188,8 @@ export default function AdminLoginPage() {
           </a>
         </div>
 
-        <div className="mt-4 text-center text-xs text-gray-500">
-          <p>Тестовые данные: admin / admin123</p>
-        </div>
       </div>
 
-      {/* Admin Features Section */}
-      <div className="mt-12 w-full max-w-2xl">
-        <h2 className="text-2xl font-bold text-gray-100 text-center mb-6">
-          Возможности администратора
-        </h2>
-        <div className="flex justify-center gap-8">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-purple-500/15 rounded-2xl flex items-center justify-center mb-4">
-              <Users className="h-8 w-8 text-purple-500" />
-            </div>
-            <span className="text-gray-100 font-medium">Сотрудники</span>
-          </div>
-          
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-purple-500/15 rounded-2xl flex items-center justify-center mb-4">
-              <Settings className="h-8 w-8 text-purple-500" />
-            </div>
-            <span className="text-gray-100 font-medium">Настройки</span>
-          </div>
-          
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-purple-500/15 rounded-2xl flex items-center justify-center mb-4">
-              <BarChart3 className="h-8 w-8 text-purple-500" />
-            </div>
-            <span className="text-gray-100 font-medium">Аналитика</span>
-          </div>
-        </div>
-      </div>
 
       {/* Footer */}
       <div className="mt-12 text-center text-gray-500 text-sm">

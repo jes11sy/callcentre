@@ -72,10 +72,6 @@ export function LoginForm() {
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-green-900 text-gray-100 flex flex-col items-center justify-center p-4">
       {/* Logo Section */}
       <div className="flex flex-col items-center mb-8">
-        <div className="flex items-center gap-4 text-4xl font-bold text-gray-100 mb-2">
-          <Phone className="text-green-500 text-5xl" />
-          <span>Call Centre CRM</span>
-        </div>
         <div className="text-gray-400 text-xl font-medium">
           Система управления колл-центром
         </div>
@@ -85,7 +81,6 @@ export function LoginForm() {
       <div className="w-full max-w-md bg-gray-900/80 backdrop-blur-md rounded-2xl p-10 shadow-2xl border border-white/5">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-100 mb-2">Вход для операторов</h1>
-          <p className="text-gray-400">Введите ваши учетные данные для входа в систему</p>
         </div>
 
         <Form {...form}>
@@ -176,34 +171,6 @@ export function LoginForm() {
         </Form>
       </div>
 
-      {/* Features Section */}
-      <div className="mt-12 w-full max-w-2xl">
-        <h2 className="text-2xl font-bold text-gray-100 text-center mb-6">
-          Возможности системы
-        </h2>
-        <div className="flex justify-center gap-8">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-green-500/15 rounded-2xl flex items-center justify-center mb-4">
-              <Phone className="h-8 w-8 text-green-500" />
-            </div>
-            <span className="text-gray-100 font-medium">Телефония</span>
-          </div>
-          
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-green-500/15 rounded-2xl flex items-center justify-center mb-4">
-              <MessageSquare className="h-8 w-8 text-green-500" />
-            </div>
-            <span className="text-gray-100 font-medium">Сообщения</span>
-          </div>
-          
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-green-500/15 rounded-2xl flex items-center justify-center mb-4">
-              <ShoppingCart className="h-8 w-8 text-green-500" />
-            </div>
-            <span className="text-gray-100 font-medium">Заказы</span>
-          </div>
-        </div>
-      </div>
 
       {/* Footer */}
       <div className="mt-12 text-center text-gray-500 text-sm">
