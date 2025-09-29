@@ -336,11 +336,17 @@ export const orderValidation = {
       .withMessage('Invalid order status'),
     body('result')
       .optional()
-      .isDecimal()
+      .custom((value) => {
+        if (value === null || value === undefined || value === '') return true;
+        return !isNaN(parseFloat(value)) && isFinite(value);
+      })
       .withMessage('Result must be a valid decimal number'),
     body('expenditure')
       .optional()
-      .isDecimal()
+      .custom((value) => {
+        if (value === null || value === undefined || value === '') return true;
+        return !isNaN(parseFloat(value)) && isFinite(value);
+      })
       .withMessage('Expenditure must be a valid decimal number'),
     handleValidationErrors
   ]
