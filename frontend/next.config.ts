@@ -10,6 +10,19 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   output: 'standalone',
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "media-src 'self' blob: data: https://s3.twcstorage.ru https://*.twcstorage.ru"
+          }
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
