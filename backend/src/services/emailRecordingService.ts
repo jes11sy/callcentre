@@ -156,7 +156,7 @@ class EmailRecordingService {
         port: imapConfig.port,
         tls: imapConfig.tls,
         user: imapConfig.user,
-        password: imapConfig.password, // ВРЕМЕННО для отладки
+        passwordSet: !!imapConfig.password,
         connTimeout: imapConfig.connTimeout,
         authTimeout: imapConfig.authTimeout
       });
@@ -195,16 +195,18 @@ class EmailRecordingService {
    */
   private async fetchEmails(imap: Imap): Promise<void> {
     return new Promise((resolve, reject) => {
-      imap.openBox('INBOX', false, (err, box) => {
+      imap.openBox('INBOX', true, (err, box) => { // true = read-write режим
         if (err) {
           reject(err);
           return;
         }
 
-        // Ищем непрочитанные письма от Mango
+        // Ищем все письма от Mango за последние 7 дней (для тестирования)
         const fromEmail = this.config?.searchCriteria?.[0] || 'mango@example.com';
+        const since = new Date();
+        since.setDate(since.getDate() - 7);
         const searchCriteria = [
-          'UNSEEN',
+          ['SINCE', since],
           ['FROM', fromEmail]
         ];
 
@@ -328,13 +330,26 @@ class EmailRecordingService {
         console.log('🔍 Анализ вложения:', filename);
         
         // Парсим название файла: 2025-09-21__11-45-54__79093330057__79923298779.mp3
-        const match = filename.match(/(\d{4}-\d{2}-\d{2})__(\d{2}-\d{2}-\d{2})__(\d{11})__(\d{11})/);
+        let match = filename.match(/(\d{4}-\d{2}-\d{2})__(\d{2}-\d{2}-\d{2})__(\d{11})__(\d{11})/);
         if (match) {
           const [, date, time, phone1, phone2] = match;
-          console.log('✅ Найдены данные из вложения:', { date, time, phones: [phone1, phone2] });
+          console.log('✅ Найдены данные из вложения (формат 1):', { date, time, phones: [phone1, phone2] });
           return {
-            date: date.replace(/-/g, '-'), // 2025-09-21
+            date: date, // 2025-09-21
             time: time.replace(/-/g, ':'), // 11:45:54
+            phones: [phone1, phone2]
+          };
+        }
+
+        // Парсим альтернативный формат: 2023.12.23__18-43-12__74951234567__74951234567
+        match = filename.match(/(\d{4})\.(\d{2})\.(\d{2})__(\d{2}-\d{2}-\d{2})__(\d{11})__(\d{11})/);
+        if (match) {
+          const [, year, month, day, time, phone1, phone2] = match;
+          const date = `${year}-${month}-${day}`; // Конвертируем в формат 2023-12-23
+          console.log('✅ Найдены данные из вложения (формат 2):', { date, time, phones: [phone1, phone2] });
+          return {
+            date: date,
+            time: time.replace(/-/g, ':'), // 18:43:12
             phones: [phone1, phone2]
           };
         }
