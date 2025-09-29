@@ -38,7 +38,8 @@ import {
   AlertTriangle,
   Users,
   Camera,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -144,6 +145,35 @@ export default function AdminEmployeesPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Функции для просмотра файлов сотрудников
+  const viewEmployeePassport = async (employeeId: number) => {
+    try {
+      const response = await authApi.get(`/employees/${employeeId}/passport`);
+      if (response.data.success) {
+        window.open(response.data.url, '_blank');
+      } else {
+        toast.error('Фото паспорта не найдено');
+      }
+    } catch (error: any) {
+      console.error('Error viewing passport:', error);
+      toast.error('Ошибка при загрузке фото паспорта');
+    }
+  };
+
+  const viewEmployeeContract = async (employeeId: number) => {
+    try {
+      const response = await authApi.get(`/employees/${employeeId}/contract`);
+      if (response.data.success) {
+        window.open(response.data.url, '_blank');
+      } else {
+        toast.error('Фото договора не найдено');
+      }
+    } catch (error: any) {
+      console.error('Error viewing contract:', error);
+      toast.error('Ошибка при загрузке фото договора');
     }
   };
 
@@ -565,13 +595,14 @@ export default function AdminEmployeesPage() {
                       <TableHead>Дата создания</TableHead>
                       <TableHead>Заказы</TableHead>
                       <TableHead>Звонки</TableHead>
+                      <TableHead>Документы</TableHead>
                       <TableHead className="text-right">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredEmployees.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center text-gray-500">
+                        <TableCell colSpan={10} className="text-center text-gray-500">
                           {searchTerm ? 'Сотрудники не найдены.' : 'Нет сотрудников.'}
                         </TableCell>
                       </TableRow>
@@ -592,6 +623,35 @@ export default function AdminEmployeesPage() {
                           </TableCell>
                           <TableCell>{employee._count.orders}</TableCell>
                           <TableCell>{employee._count.calls}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-1">
+                              {employee.passport && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => viewEmployeePassport(employee.id)}
+                                  className="h-6 w-6 p-0"
+                                  title="Посмотреть паспорт"
+                                >
+                                  <Camera className="h-3 w-3" />
+                                </Button>
+                              )}
+                              {employee.contract && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => viewEmployeeContract(employee.id)}
+                                  className="h-6 w-6 p-0"
+                                  title="Посмотреть договор"
+                                >
+                                  <FileText className="h-3 w-3" />
+                                </Button>
+                              )}
+                              {!employee.passport && !employee.contract && (
+                                <span className="text-xs text-muted-foreground">-</span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end space-x-2">
                               <Button
@@ -760,13 +820,27 @@ export default function AdminEmployeesPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium flex items-center">
-                      <Camera className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Фото паспорта
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium flex items-center">
+                        <Camera className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Фото паспорта
+                      </Label>
+                      {selectedEmployee?.passport && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => viewEmployeePassport(selectedEmployee.id)}
+                          className="h-7 px-2"
+                        >
+                          <Eye className="mr-1 h-3 w-3" />
+                          Посмотреть
+                        </Button>
+                      )}
+                    </div>
                     {selectedEmployee?.passport && !editPassportFile && (
                       <div className="text-xs text-muted-foreground mb-2">
-                        Текущий файл: {selectedEmployee.passport}
+                        Текущий файл загружен
                       </div>
                     )}
                     <FileUpload
@@ -780,13 +854,27 @@ export default function AdminEmployeesPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium flex items-center">
-                      <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Фото договора
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium flex items-center">
+                        <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Фото договора
+                      </Label>
+                      {selectedEmployee?.contract && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => viewEmployeeContract(selectedEmployee.id)}
+                          className="h-7 px-2"
+                        >
+                          <Eye className="mr-1 h-3 w-3" />
+                          Посмотреть
+                        </Button>
+                      )}
+                    </div>
                     {selectedEmployee?.contract && !editContractFile && (
                       <div className="text-xs text-muted-foreground mb-2">
-                        Текущий файл: {selectedEmployee.contract}
+                        Текущий файл загружен
                       </div>
                     )}
                     <FileUpload

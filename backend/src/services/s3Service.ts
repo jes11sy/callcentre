@@ -123,6 +123,76 @@ class S3Service {
       throw error;
     }
   }
+
+  /**
+   * Загружает фото паспорта сотрудника в S3
+   */
+  async uploadPassport(filename: string, content: Buffer): Promise<string> {
+    try {
+      const key = `callcentre/operator_passport/${filename}`;
+      
+      console.log(`📄 Загружаем фото паспорта в S3: ${key}`);
+      
+      const result = await this.s3.upload({
+        Bucket: this.bucket,
+        Key: key,
+        Body: content,
+        ContentType: 'image/jpeg',
+        ACL: 'private'
+      }).promise();
+
+      console.log(`✅ Фото паспорта успешно загружено в S3: ${result.Location}`);
+      return key;
+    } catch (error) {
+      console.error('❌ Ошибка загрузки фото паспорта в S3:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Загружает фото договора сотрудника в S3
+   */
+  async uploadContract(filename: string, content: Buffer): Promise<string> {
+    try {
+      const key = `callcentre/operator_contract/${filename}`;
+      
+      console.log(`📋 Загружаем фото договора в S3: ${key}`);
+      
+      const result = await this.s3.upload({
+        Bucket: this.bucket,
+        Key: key,
+        Body: content,
+        ContentType: 'image/jpeg',
+        ACL: 'private'
+      }).promise();
+
+      console.log(`✅ Фото договора успешно загружено в S3: ${result.Location}`);
+      return key;
+    } catch (error) {
+      console.error('❌ Ошибка загрузки фото договора в S3:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Получает подписанный URL для просмотра фото паспорта/договора
+   */
+  async getEmployeeFileUrl(key: string): Promise<string> {
+    try {
+      console.log(`🔗 Создаем подписанный URL для файла сотрудника: ${key}`);
+      
+      const url = this.s3.getSignedUrl('getObject', {
+        Bucket: this.bucket,
+        Key: key,
+        Expires: 3600 // URL действует 1 час
+      });
+
+      return url;
+    } catch (error) {
+      console.error('❌ Ошибка создания URL для файла сотрудника:', error);
+      throw error;
+    }
+  }
 }
 
 export default new S3Service();

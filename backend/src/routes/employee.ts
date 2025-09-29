@@ -7,6 +7,8 @@ import {
   deleteEmployee,
   toggleEmployeeStatus,
   updateWorkStatus,
+  getEmployeePassport,
+  getEmployeeContract,
 } from '../controllers/employeeController';
 import { requireAdmin, authenticate } from '../middleware/auth';
 import { uploadEmployeeFiles } from '../middleware/upload';
@@ -40,5 +42,11 @@ router.delete('/:id', operatorValidation.update[0], cacheInvalidation.employees,
 
 // PATCH /api/employees/:id/status - Toggle employee status
 router.patch('/:id/status', operatorValidation.update[0], cacheInvalidation.employees, auditLoggers.updateOperator, toggleEmployeeStatus);
+
+// GET /api/employees/:id/passport - Get employee passport photo
+router.get('/:id/passport', operatorValidation.update[0], getEmployeePassport);
+
+// GET /api/employees/:id/contract - Get employee contract photo
+router.get('/:id/contract', operatorValidation.update[0], getEmployeeContract);
 
 export default router;

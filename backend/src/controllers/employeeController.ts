@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { hashPassword } from '../utils/password';
 import { logger } from '../config/logger';
+import s3Service from '../services/s3Service';
 
 // Получить всех операторов
 export const getAllEmployees = async (req: Request, res: Response) => {
@@ -120,6 +121,18 @@ export const createEmployee = async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
+    // Upload files to S3 if provided
+    let passportS3Key: string | null = null;
+    let contractS3Key: string | null = null;
+
+    if (passportPhoto) {
+      passportS3Key = await s3Service.uploadPassport(passportPhoto.filename, passportPhoto.buffer);
+    }
+
+    if (contractPhoto) {
+      contractS3Key = await s3Service.uploadContract(contractPhoto.filename, contractPhoto.buffer);
+    }
+
     // Create employee
     const newEmployee = await prisma.callcentreOperator.create({
       data: {
@@ -129,8 +142,8 @@ export const createEmployee = async (req: Request, res: Response) => {
         city,
         status,
         statusWork,
-        passport: passportPhoto?.filename || null,
-        contract: contractPhoto?.filename || null,
+        passport: passportS3Key,
+        contract: contractS3Key,
         note: note || null,
         dateCreate: new Date(),
       },
@@ -212,12 +225,12 @@ export const updateEmployee = async (req: Request, res: Response) => {
       ...(note !== undefined && { note: note || null }),
     };
 
-    // Update file paths if new files uploaded
+    // Upload new files to S3 if provided
     if (passportPhoto) {
-      updateData.passport = passportPhoto.filename;
+      updateData.passport = await s3Service.uploadPassport(passportPhoto.filename, passportPhoto.buffer);
     }
     if (contractPhoto) {
-      updateData.contract = contractPhoto.filename;
+      updateData.contract = await s3Service.uploadContract(contractPhoto.filename, contractPhoto.buffer);
     }
 
     // Hash new password if provided
@@ -404,6 +417,80 @@ export const updateWorkStatus = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: { message: 'Ошибка сервера при обновлении статуса работы' }
+    });
+  }
+};
+
+/**
+ * Получить фото паспорта сотрудника
+ */
+export const getEmployeePassport = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const employee = await prisma.callcentreOperator.findUnique({
+      where: { id: parseInt(id) },
+      select: { passport: true, name: true }
+    });
+
+    if (!employee || !employee.passport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Фото паспорта не найдено'
+      });
+    }
+
+    // Получаем подписанный URL из S3
+    const signedUrl = await s3Service.getEmployeeFileUrl(employee.passport);
+    
+    res.json({
+      success: true,
+      url: signedUrl,
+      filename: `passport_${employee.name}.jpg`
+    });
+
+  } catch (error: any) {
+    logger.error(`Error getting employee passport: ${error.message}`, error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при получении фото паспорта'
+    });
+  }
+};
+
+/**
+ * Получить фото договора сотрудника
+ */
+export const getEmployeeContract = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const employee = await prisma.callcentreOperator.findUnique({
+      where: { id: parseInt(id) },
+      select: { contract: true, name: true }
+    });
+
+    if (!employee || !employee.contract) {
+      return res.status(404).json({
+        success: false,
+        message: 'Фото договора не найдено'
+      });
+    }
+
+    // Получаем подписанный URL из S3
+    const signedUrl = await s3Service.getEmployeeFileUrl(employee.contract);
+    
+    res.json({
+      success: true,
+      url: signedUrl,
+      filename: `contract_${employee.name}.jpg`
+    });
+
+  } catch (error: any) {
+    logger.error(`Error getting employee contract: ${error.message}`, error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при получении фото договора'
     });
   }
 };
