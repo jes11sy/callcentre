@@ -126,11 +126,33 @@ export const createEmployee = async (req: Request, res: Response) => {
     let contractS3Key: string | null = null;
 
     if (passportPhoto) {
-      passportS3Key = await s3Service.uploadPassport(passportPhoto.filename, passportPhoto.buffer);
+      try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomSuffix = Math.round(Math.random() * 1E9);
+        const extension = passportPhoto.originalname?.split('.').pop() || 'jpg';
+        const filename = `passport-${timestamp}-${randomSuffix}.${extension}`;
+        logger.info(`Uploading passport photo: ${filename}, size: ${passportPhoto.buffer.length} bytes`);
+        passportS3Key = await s3Service.uploadPassport(filename, passportPhoto.buffer);
+      } catch (error) {
+        logger.error('Error uploading passport photo:', error);
+        throw new Error('Failed to upload passport photo');
+      }
     }
 
     if (contractPhoto) {
-      contractS3Key = await s3Service.uploadContract(contractPhoto.filename, contractPhoto.buffer);
+      try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomSuffix = Math.round(Math.random() * 1E9);
+        const extension = contractPhoto.originalname?.split('.').pop() || 'jpg';
+        const filename = `contract-${timestamp}-${randomSuffix}.${extension}`;
+        logger.info(`Uploading contract photo: ${filename}, size: ${contractPhoto.buffer.length} bytes`);
+        contractS3Key = await s3Service.uploadContract(filename, contractPhoto.buffer);
+      } catch (error) {
+        logger.error('Error uploading contract photo:', error);
+        throw new Error('Failed to upload contract photo');
+      }
     }
 
     // Create employee
@@ -227,10 +249,20 @@ export const updateEmployee = async (req: Request, res: Response) => {
 
     // Upload new files to S3 if provided
     if (passportPhoto) {
-      updateData.passport = await s3Service.uploadPassport(passportPhoto.filename, passportPhoto.buffer);
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomSuffix = Math.round(Math.random() * 1E9);
+      const extension = passportPhoto.originalname?.split('.').pop() || 'jpg';
+      const filename = `passport-${timestamp}-${randomSuffix}.${extension}`;
+      updateData.passport = await s3Service.uploadPassport(filename, passportPhoto.buffer);
     }
     if (contractPhoto) {
-      updateData.contract = await s3Service.uploadContract(contractPhoto.filename, contractPhoto.buffer);
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomSuffix = Math.round(Math.random() * 1E9);
+      const extension = contractPhoto.originalname?.split('.').pop() || 'jpg';
+      const filename = `contract-${timestamp}-${randomSuffix}.${extension}`;
+      updateData.contract = await s3Service.uploadContract(filename, contractPhoto.buffer);
     }
 
     // Hash new password if provided
