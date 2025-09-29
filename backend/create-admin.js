@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 
 async function createAdmin() {
   try {
-    const login = 'admin';
-    const password = 'admin123';
+    const login = 'jessy';
+    const password = 'Fuck2015@';
     const note = 'Администратор';
 
     // Проверяем существование

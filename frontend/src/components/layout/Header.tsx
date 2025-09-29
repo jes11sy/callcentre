@@ -43,7 +43,12 @@ import {
   Wallet,
   Mail,
   Bell,
-  Circle
+  Circle,
+  BookOpen,
+  UserCheck,
+  ClipboardList,
+  DollarSign,
+  XCircle
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -144,6 +149,13 @@ export function Header({ variant = 'operator' }: HeaderProps) {
     { name: 'Статистика', href: '/stats', icon: TrendingUp },
   ];
 
+  const referenceItems = [
+    { name: 'Правила сотрудника', href: '/reference/employee-rules', icon: UserCheck },
+    { name: 'Правило приема заказов', href: '/reference/order-rules', icon: ClipboardList },
+    { name: 'Прайс', href: '/reference/pricing', icon: DollarSign },
+    { name: 'Незаказы', href: '/reference/non-orders', icon: XCircle },
+  ];
+
   const adminNavItems = [
     { name: 'Сотрудники', href: '/admin/employees', icon: Users },
     { name: 'Авито', href: '/admin/avito', icon: MessageSquare },
@@ -208,6 +220,37 @@ export function Header({ variant = 'operator' }: HeaderProps) {
                   </NavigationMenuItem>
                 );
               })}
+              
+              {/* Справочник с выпадающим меню - только для операторов */}
+              {variant === 'operator' && (
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="h-10 px-4 py-2 text-sm font-medium">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Справочник
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid gap-3 p-6 w-[400px]">
+                      {referenceItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <NavigationMenuLink
+                            key={item.name}
+                            href={item.href}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Icon className="h-4 w-4" />
+                              <div className="text-sm font-medium leading-none">
+                                {item.name}
+                              </div>
+                            </div>
+                          </NavigationMenuLink>
+                        );
+                      })}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
 
@@ -337,6 +380,34 @@ export function Header({ variant = 'operator' }: HeaderProps) {
                   </Button>
                 );
               })}
+              
+              {/* Справочник в мобильном меню - только для операторов */}
+              {variant === 'operator' && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-muted-foreground">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Справочник</span>
+                  </div>
+                  {referenceItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.href);
+                    return (
+                      <Button
+                        key={item.name}
+                        variant={active ? "secondary" : "ghost"}
+                        className="justify-start h-10 ml-4"
+                        asChild
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <a href={item.href}>
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.name}
+                        </a>
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
