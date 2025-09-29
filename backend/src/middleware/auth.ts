@@ -28,7 +28,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     req.user = payload;
     next();
   } catch (error) {
-    console.log('🔒 Auth error:', error.message);
+    console.log('🔒 Auth error:', error instanceof Error ? error.message : 'Unknown error');
     next(createError('Invalid or expired token', 401));
   }
 };
