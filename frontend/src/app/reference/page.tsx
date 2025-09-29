@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, UserCheck, ClipboardList, DollarSign, XCircle, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 
@@ -12,7 +12,6 @@ export default function ReferencePage() {
       title: 'Правила сотрудника',
       description: 'Основные правила и требования для операторов',
       href: '/reference/employee-rules',
-      icon: UserCheck,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
@@ -22,7 +21,6 @@ export default function ReferencePage() {
       title: 'Правило приема заказов',
       description: 'Процедуры и требования при создании заказов',
       href: '/reference/order-rules',
-      icon: ClipboardList,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
@@ -32,17 +30,15 @@ export default function ReferencePage() {
       title: 'Прайс',
       description: 'Актуальные цены на услуги по ремонту',
       href: '/reference/pricing',
-      icon: DollarSign,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
-      features: ['КП (Компьютеры)', 'БТ (Бытовая техника)', 'МНЧ (Мобильные)']
+      features: ['КП (Компьютеры)', 'БТ (Бытовая техника)', 'МНЧ (Муж на час)']
     },
     {
       title: 'Незаказы',
       description: 'Причины отказа от заказов и правила обработки',
       href: '/reference/non-orders',
-      icon: XCircle,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200',
@@ -64,13 +60,11 @@ export default function ReferencePage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         {referenceSections.map((section, index) => {
-          const Icon = section.icon;
           return (
             <Link key={index} href={section.href} className="group">
               <Card className={`h-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer ${section.bgColor} ${section.borderColor} border-2`}>
                 <CardHeader>
                   <CardTitle className={`flex items-center space-x-2 ${section.color}`}>
-                    <Icon className="h-6 w-6" />
                     <span>{section.title}</span>
                     <ArrowRight className="h-4 w-4 ml-auto group-hover:translate-x-1 transition-transform" />
                   </CardTitle>
