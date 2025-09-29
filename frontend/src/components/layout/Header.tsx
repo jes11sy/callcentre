@@ -141,6 +141,7 @@ export function Header({ variant = 'operator' }: HeaderProps) {
     { name: 'Центр сообщений', href: '/messages', icon: MessageSquare },
     { name: 'Заказы', href: '/orders', icon: FileText },
     { name: 'Статистика', href: '/stats', icon: TrendingUp },
+    { name: 'Справочник', href: '/reference', icon: BookOpen },
   ];
 
 
@@ -209,21 +210,6 @@ export function Header({ variant = 'operator' }: HeaderProps) {
                 );
               })}
               
-              {/* Справочник - только для операторов */}
-              {variant === 'operator' && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    href="/reference"
-                    className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${
-                      isActive('/reference') 
-                        ? 'bg-accent text-accent-foreground shadow-sm' 
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    Справочник
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              )}
               
             </NavigationMenuList>
           </NavigationMenu>
@@ -355,20 +341,6 @@ export function Header({ variant = 'operator' }: HeaderProps) {
                 );
               })}
               
-              {/* Справочник в мобильном меню - только для операторов */}
-              {variant === 'operator' && (
-                <Button
-                  variant={isActive('/reference') ? "secondary" : "ghost"}
-                  className="justify-start h-12"
-                  asChild
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <a href="/reference">
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Справочник
-                  </a>
-                </Button>
-              )}
               
             </div>
           </div>
