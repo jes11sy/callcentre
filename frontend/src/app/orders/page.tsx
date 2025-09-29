@@ -322,8 +322,23 @@ function OrdersContent() {
         throw new Error('Failed to load recording');
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
+      let audioUrl: string;
+      
+      // Проверяем, возвращает ли сервер JSON (S3) или аудио поток (локальный файл)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // S3 файл - получаем подписанный URL
+        const data = await response.json();
+        if (data.success && data.url) {
+          audioUrl = data.url;
+        } else {
+          throw new Error(data.message || 'Не удалось получить URL записи');
+        }
+      } else {
+        // Локальный файл - создаем blob URL
+        const audioBlob = await response.blob();
+        audioUrl = URL.createObjectURL(audioBlob);
+      }
       
       const audio = new Audio(audioUrl);
       

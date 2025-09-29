@@ -66,6 +66,7 @@ import { CreateOrderModal } from '@/components/telephony/CreateOrderModal';
 import { LoadingState, LoadingSpinner, TableSkeleton } from '@/components/ui/loading';
 import { ErrorBoundary, ErrorMessage, EmptyState } from '@/components/ui/error-boundary';
 import { notifications } from '@/components/ui/notifications';
+import { SpotifyAudioPlayer } from '@/components/ui/spotify-audio-player';
 
 // Types
 interface Call {
@@ -166,19 +167,7 @@ export default function TelephonyPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
   const [playingCall, setPlayingCall] = useState<number | null>(null);
-  const [audioPlayer, setAudioPlayer] = useState<{
-    audio: HTMLAudioElement | null;
-    currentTime: number;
-    duration: number;
-    isPlaying: boolean;
-    volume: number;
-  }>({
-    audio: null,
-    currentTime: 0,
-    duration: 0,
-    isPlaying: false,
-    volume: 1
-  });
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [selectedCallForOrder, setSelectedCallForOrder] = useState<Call | null>(null);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
   const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
@@ -421,152 +410,62 @@ export default function TelephonyPage() {
     }
   };
 
-  // Play call recording
-  // Функции управления аудиоплеером
+  // Load call recording
   const loadRecording = async (call: Call) => {
-    if (call.recordingPath) {
+    if (!call.recordingPath) {
+      toast.error('Запись не найдена');
+      return;
+    }
+
+    try {
       setPlayingCall(call.id);
       
-      try {
-        // Останавливаем предыдущий аудио если есть
-        if (audioPlayer.audio) {
-          audioPlayer.audio.pause();
-          audioPlayer.audio.currentTime = 0;
+      // Получаем аудио файл через fetch с авторизацией
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recordings/call/${call.id}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        
-        // Получаем аудио файл через fetch с авторизацией
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recordings/call/${call.id}/download`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Создаем blob URL для воспроизведения
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        // Создаем новый аудио элемент
-        const audio = new Audio(audioUrl);
-        audio.volume = audioPlayer.volume;
-        
-        // Обработчики событий
-        audio.onloadedmetadata = () => {
-          setAudioPlayer(prev => ({
-            ...prev,
-            audio,
-            duration: audio.duration,
-            currentTime: 0
-          }));
-        };
-        
-        audio.ontimeupdate = () => {
-          setAudioPlayer(prev => ({
-            ...prev,
-            currentTime: audio.currentTime
-          }));
-        };
-        
-        audio.onended = () => {
-          setPlayingCall(null);
-          setAudioPlayer(prev => ({
-            ...prev,
-            audio: null,
-            isPlaying: false,
-            currentTime: 0,
-            duration: 0
-          }));
-          URL.revokeObjectURL(audioUrl);
-          notifications.info('Воспроизведение завершено');
-        };
-        
-        audio.onerror = (error) => {
-          console.error('Ошибка загрузки аудио:', error);
-          notifications.error('Ошибка загрузки записи');
-          setPlayingCall(null);
-          setAudioPlayer(prev => ({
-            ...prev,
-            audio: null,
-            isPlaying: false
-          }));
-          URL.revokeObjectURL(audioUrl);
-        };
-        
-        // Загружаем аудио
-        audio.load();
-        
-      } catch (error) {
-        console.error('Ошибка при получении записи:', error);
-        notifications.error('Ошибка при получении записи');
-        setPlayingCall(null);
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } else {
-      notifications.error('Запись звонка недоступна');
-    }
-  };
-
-  const togglePlayPause = () => {
-    if (audioPlayer.audio) {
-      if (audioPlayer.isPlaying) {
-        audioPlayer.audio.pause();
-        setAudioPlayer(prev => ({ ...prev, isPlaying: false }));
+      
+      let audioUrl: string;
+      
+      // Проверяем, возвращает ли сервер JSON (S3) или аудио поток (локальный файл)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // S3 файл - получаем подписанный URL
+        const data = await response.json();
+        if (data.success && data.url) {
+          audioUrl = data.url;
+        } else {
+          throw new Error(data.message || 'Не удалось получить URL записи');
+        }
       } else {
-        audioPlayer.audio.play().then(() => {
-          setAudioPlayer(prev => ({ ...prev, isPlaying: true }));
-        }).catch(error => {
-          console.error('Ошибка воспроизведения:', error);
-          notifications.error('Ошибка воспроизведения записи');
-        });
+        // Локальный файл - создаем blob URL
+        const audioBlob = await response.blob();
+        audioUrl = URL.createObjectURL(audioBlob);
       }
-    }
-  };
-
-  const seekTo = (time: number) => {
-    if (audioPlayer.audio) {
-      audioPlayer.audio.currentTime = time;
-      setAudioPlayer(prev => ({ ...prev, currentTime: time }));
-    }
-  };
-
-  const setVolume = (volume: number) => {
-    if (audioPlayer.audio) {
-      audioPlayer.audio.volume = volume;
-      setAudioPlayer(prev => ({ ...prev, volume }));
-    }
-  };
-
-  const skipBackward = () => {
-    if (audioPlayer.audio) {
-      const newTime = Math.max(0, audioPlayer.currentTime - 10);
-      seekTo(newTime);
-    }
-  };
-
-  const skipForward = () => {
-    if (audioPlayer.audio) {
-      const newTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10);
-      seekTo(newTime);
-    }
-  };
-
-  const stopPlayback = () => {
-    if (audioPlayer.audio) {
-      audioPlayer.audio.pause();
-      audioPlayer.audio.currentTime = 0;
+      
+      setCurrentAudioUrl(audioUrl);
+      
+    } catch (error: any) {
+      console.error('Error loading recording:', error);
+      toast.error('Ошибка загрузки записи: ' + error.message);
       setPlayingCall(null);
-      setAudioPlayer(prev => ({
-        ...prev,
-        audio: null,
-        isPlaying: false,
-        currentTime: 0,
-        duration: 0
-      }));
+      setCurrentAudioUrl(null);
     }
   };
+
+  const closePlayer = () => {
+    setPlayingCall(null);
+    setCurrentAudioUrl(null);
+  };
+
+
 
   // Форматирование времени
   const formatTime = (seconds: number) => {
@@ -604,84 +503,19 @@ export default function TelephonyPage() {
       );
     }
 
-    return (
-      <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border">
-        {/* Кнопки управления */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={skipBackward}
-            className="h-6 w-6 p-0"
-          >
-            <SkipBack className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={togglePlayPause}
-            className="h-6 w-6 p-0"
-          >
-            {audioPlayer.isPlaying ? (
-              <Pause className="h-3 w-3" />
-            ) : (
-              <Play className="h-3 w-3" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={skipForward}
-            className="h-6 w-6 p-0"
-          >
-            <SkipForward className="h-3 w-3" />
-          </Button>
-        </div>
-
-        {/* Прогресс бар */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <span>{formatTime(audioPlayer.currentTime)}</span>
-            <div className="flex-1 bg-gray-200 rounded-full h-1 cursor-pointer"
-                 onClick={(e) => {
-                   const rect = e.currentTarget.getBoundingClientRect();
-                   const clickX = e.clientX - rect.left;
-                   const percentage = clickX / rect.width;
-                   const newTime = percentage * audioPlayer.duration;
-                   seekTo(newTime);
-                 }}>
-              <div 
-                className="bg-blue-500 h-1 rounded-full transition-all duration-100"
-                style={{ width: `${audioPlayer.duration > 0 ? (audioPlayer.currentTime / audioPlayer.duration) * 100 : 0}%` }}
-              />
-            </div>
-            <span>{formatTime(audioPlayer.duration)}</span>
-          </div>
-        </div>
-
-        {/* Громкость */}
-        <div className="flex items-center gap-1">
-          <Volume2 className="h-3 w-3 text-gray-500" />
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={audioPlayer.volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-12 h-1"
-          />
-        </div>
-
-        {/* Кнопка остановки */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={stopPlayback}
-          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-        >
-          ×
-        </Button>
+    return currentAudioUrl ? (
+      <SpotifyAudioPlayer 
+        audioUrl={currentAudioUrl}
+        onError={(error) => {
+          toast.error(error);
+          closePlayer();
+        }}
+        className="min-w-[400px]"
+      />
+    ) : (
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <span className="text-sm text-muted-foreground">Загрузка...</span>
       </div>
     );
   };
