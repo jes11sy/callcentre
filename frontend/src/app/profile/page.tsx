@@ -120,7 +120,7 @@ export default function ProfilePage() {
   const { data: profile, isLoading, error } = useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: async () => {
-      const response = await fetch('/api/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/profile`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
@@ -156,7 +156,7 @@ export default function ProfilePage() {
   // Обновление профиля
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      const response = await fetch('/api/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +185,7 @@ export default function ProfilePage() {
   // Смена пароля
   const changePasswordMutation = useMutation({
     mutationFn: async (data: PasswordFormData) => {
-      const response = await fetch('/api/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

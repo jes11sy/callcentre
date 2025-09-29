@@ -61,7 +61,7 @@ export function Header({ variant = 'operator' }: HeaderProps) {
   useEffect(() => {
     const loadWorkStatus = async () => {
       try {
-        const response = await fetch('/api/profile', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/profile`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
