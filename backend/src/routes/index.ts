@@ -36,7 +36,7 @@ router.use('/orders', authenticate, orderRoutes);
 router.use('/avito-messenger', authenticate, avitoMessengerRoutes);
 router.use('/profile', authenticate, profileRoutes);
 router.use('/recordings', recordingRoutes);
-router.use('/email-settings', emailSettingsRoutes);
+router.use('/email-settings', authenticate, emailSettingsRoutes);
 
 // Legacy health check endpoint (для совместимости)
 router.get('/health-legacy', async (req, res) => {

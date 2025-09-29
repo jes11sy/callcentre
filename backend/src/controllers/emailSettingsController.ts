@@ -22,10 +22,12 @@ interface EmailSettings {
  */
 export const getEmailSettings = async (req: Request, res: Response) => {
   try {
+    console.log('📧 Запрос настроек почты...');
     // Ищем настройки в БД
     let settings = await prisma.emailSettings.findFirst({
       orderBy: { createdAt: 'desc' }
     });
+    console.log('📧 Найденные настройки:', settings ? 'найдены' : 'не найдены');
 
     // Если настроек нет в БД, создаем из .env
     if (!settings) {
@@ -272,6 +274,7 @@ export const testEmailConnection = async (req: Request, res: Response) => {
  */
 export const getEmailMonitoringStats = async (req: Request, res: Response) => {
   try {
+    console.log('📊 Запрос статистики почты...');
     // Получаем статистику из БД
     const totalCalls = await prisma.call.count();
     const callsWithRecordings = await prisma.call.count({
