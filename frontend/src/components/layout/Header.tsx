@@ -86,7 +86,7 @@ export function Header({ variant = 'operator' }: HeaderProps) {
 
   const handleWorkStatusChange = async (newStatus: string) => {
     try {
-      const response = await fetch('/api/employees/work-status', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employees/work-status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
@@ -112,7 +112,7 @@ export function Header({ variant = 'operator' }: HeaderProps) {
       // Устанавливаем статус "оффлайн" перед выходом
       if (variant === 'operator') {
         try {
-          await fetch('/api/employees/work-status', {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employees/work-status`, {
             method: 'PATCH',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,

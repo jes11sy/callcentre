@@ -400,7 +400,7 @@ export default function TelephonyPage() {
       setOrderHistoryLoading(true);
       setSelectedCallForHistory(call);
       
-      const response = await fetch(`/api/orders?search=${encodeURIComponent(call.phoneClient)}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders?search=${encodeURIComponent(call.phoneClient)}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
@@ -436,7 +436,7 @@ export default function TelephonyPage() {
         
         // Получаем аудио файл через fetch с авторизацией
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`/api/recordings/call/${call.id}/download`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recordings/call/${call.id}/download`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -725,7 +725,7 @@ export default function TelephonyPage() {
   const triggerEmailCheck = async () => {
     try {
       setEmailCheckLoading(true);
-      const response = await fetch('/api/recordings/cron/check-email', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recordings/cron/check-email`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,

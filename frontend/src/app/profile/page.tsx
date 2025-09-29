@@ -138,7 +138,7 @@ export default function ProfilePage() {
   const { data: profileStats } = useQuery<ProfileStats>({
     queryKey: ['profileStats'],
     queryFn: async () => {
-      const response = await fetch('/api/profile/stats', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/profile/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
