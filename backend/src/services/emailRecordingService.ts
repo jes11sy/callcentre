@@ -133,22 +133,30 @@ class EmailRecordingService {
       });
 
       const imapConfig = {
-        ...this.config,
+        host: this.config.host,
+        port: this.config.port,
+        tls: this.config.secure,
+        user: this.config.user,
+        password: this.config.password,
         connTimeout: 120000, // 2 минуты
         authTimeout: 120000, // 2 минуты
         keepalive: {
           interval: 10000,
           idleInterval: 300000,
           forceNoop: true
+        },
+        tlsOptions: {
+          rejectUnauthorized: false, // Для самоподписанных сертификатов
+          servername: this.config.host
         }
       };
 
       console.log('🔧 IMAP Config:', {
         host: imapConfig.host,
         port: imapConfig.port,
-        secure: imapConfig.secure,
+        tls: imapConfig.tls,
         user: imapConfig.user,
-        passwordSet: !!imapConfig.password,
+        password: imapConfig.password, // ВРЕМЕННО для отладки
         connTimeout: imapConfig.connTimeout,
         authTimeout: imapConfig.authTimeout
       });
