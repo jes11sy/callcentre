@@ -1115,8 +1115,8 @@ function OrdersContent() {
                             <p className="text-lg">{selectedOrder.city}</p>
                           </div>
                           <div>
-                            <Label className="text-sm font-medium text-gray-500">Имя мастера</Label>
-                            <p className="text-lg">{selectedOrder.avitoName || <span className="text-gray-400">Не назначен</span>}</p>
+                            <Label className="text-sm font-medium text-gray-500">Авито аккаунт</Label>
+                            <p className="text-lg">{selectedOrder.avitoName || <span className="text-gray-400">Не указан</span>}</p>
                           </div>
                         </CardContent>
                       </Card>
@@ -1368,7 +1368,7 @@ function OrdersContent() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <Label className="text-sm font-medium text-gray-500">Имя мастера</Label>
-                            <p className="text-lg font-semibold">{selectedOrder.avitoName || <span className="text-gray-400">Не назначен</span>}</p>
+                            <p className="text-lg font-semibold">{selectedOrder.master?.name || <span className="text-gray-400">Не назначен</span>}</p>
                           </div>
                           <div>
                             <Label className="text-sm font-medium text-gray-500">Мастер ID</Label>

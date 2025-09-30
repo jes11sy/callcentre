@@ -702,6 +702,12 @@ export const orderController = {
               id: true,
               name: true
             }
+          },
+          master: {
+            select: {
+              id: true,
+              name: true
+            }
           }
         }
       });
@@ -945,6 +951,12 @@ export const orderController = {
             }
           },
           avito: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          master: {
             select: {
               id: true,
               name: true
