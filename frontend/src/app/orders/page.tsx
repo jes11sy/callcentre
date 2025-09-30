@@ -1767,7 +1767,7 @@ function OrdersContent() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 gap-6">
                         <div>
                           <Label className="text-sm font-medium text-gray-500">Имя мастера</Label>
                           <Input 
@@ -1775,16 +1775,6 @@ function OrdersContent() {
                             disabled
                             className="mt-1"
                             placeholder="Не назначен"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-500">Мастер ID</Label>
-                          <Input 
-                            type="number"
-                            value={selectedOrder.masterId || ''} 
-                            onChange={(e) => setSelectedOrder({...selectedOrder, masterId: e.target.value ? parseInt(e.target.value) : undefined})}
-                            className="mt-1"
-                            placeholder="Введите ID мастера"
                           />
                         </div>
                       </div>
