@@ -180,7 +180,7 @@ function OrdersContent() {
   
   const userRole = userData?.role;
 
-  // Получение списка заказов (только для текущего оператора)
+  // Получение списка заказов (все заказы для всех пользователей)
   const { data: ordersData, isLoading, error } = useQuery<OrdersResponse>({
     queryKey: ['orders', page, limit, search, statusFilter, cityFilter, rkFilter, userData?.id, userData?.role],
     queryFn: async () => {
@@ -197,8 +197,8 @@ function OrdersContent() {
         ...(statusFilter && statusFilter !== 'all' && { status: statusFilter }),
         ...(cityFilter && { city: cityFilter }),
         ...(rkFilter && { rk: rkFilter }),
-        // Фильтр только по заказам текущего оператора (только для операторов, админы видят все)
-        ...(userId && userRole === 'operator' && { operatorId: userId.toString() })
+        // Все пользователи видят все заказы
+        // ...(userId && userRole === 'operator' && { operatorId: userId.toString() })
         // Сортировка всегда по дате встречи и статусу "Ожидает" - не передаем параметры сортировки
       });
 
@@ -815,6 +815,7 @@ function OrdersContent() {
                     <TableHead className="w-28">Тип техники</TableHead>
                     <TableHead className="w-40">Проблема</TableHead>
                     <TableHead className="w-24">Статус</TableHead>
+                    <TableHead className="w-24">Мастер</TableHead>
                     <TableHead className="w-20">Итог</TableHead>
                     <TableHead className="w-24">Оператор</TableHead>
                     <TableHead className="w-24">Действия</TableHead>
@@ -874,6 +875,11 @@ function OrdersContent() {
                         >
                           {order.statusOrder}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-24 truncate" title={order.masterId ? `ID: ${order.masterId}` : 'Не назначен'}>
+                          {order.masterId || <span className="text-gray-400">Не назначен</span>}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         {order.result ? `${order.result} ₽` : '-'}

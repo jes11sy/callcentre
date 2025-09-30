@@ -504,14 +504,11 @@ export const orderController = {
         };
       }
 
-      // Фильтрация по оператору: админы видят все заказы, операторы только свои
+      // Фильтрация по оператору: все пользователи видят все заказы
       if (operatorId) {
         where.operatorNameId = parseInt(operatorId as string);
-      } else if (req.user?.role === 'operator') {
-        // Если оператор не указал фильтр, показываем только его заказы
-        where.operatorNameId = req.user.id;
       }
-      // Админы видят все заказы, если не указан фильтр по оператору
+      // И админы, и операторы видят все заказы, если не указан фильтр по оператору
 
       if (avitoChatId) {
         where.avitoChatId = avitoChatId as string;
