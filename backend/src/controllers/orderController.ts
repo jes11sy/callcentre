@@ -499,9 +499,11 @@ export const orderController = {
       }
 
       if (master) {
-        where.avitoName = {
-          contains: master as string,
-          mode: 'insensitive'
+        where.master = {
+          name: {
+            contains: master as string,
+            mode: 'insensitive'
+          }
         };
       }
 
@@ -605,6 +607,12 @@ export const orderController = {
             }
           },
           avito: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          master: {
             select: {
               id: true,
               name: true

@@ -80,6 +80,10 @@ interface Order {
     id: number;
     name: string;
   };
+  master?: {
+    id: number;
+    name: string;
+  };
   callId?: string;
 }
 
@@ -818,7 +822,7 @@ function OrdersContent() {
                     <TableHead className="w-16">ID</TableHead>
                     <TableHead className="w-20">РК</TableHead>
                     <TableHead className="w-24">Город</TableHead>
-                    <TableHead className="w-28">Имя мастера</TableHead>
+                    <TableHead className="w-28">Авито аккаунт</TableHead>
                     <TableHead className="w-24">Телефон</TableHead>
                     <TableHead className="w-24">Тип заявки</TableHead>
                     <TableHead className="w-32">Клиент</TableHead>
@@ -895,8 +899,8 @@ function OrdersContent() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-24 truncate" title={order.masterId ? `ID: ${order.masterId}` : 'Не назначен'}>
-                          {order.masterId || <span className="text-gray-400">Не назначен</span>}
+                        <div className="max-w-24 truncate" title={order.master?.name || 'Не назначен'}>
+                          {order.master?.name || <span className="text-gray-400">Не назначен</span>}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
@@ -1587,11 +1591,12 @@ function OrdersContent() {
                           />
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-500">Имя мастера</Label>
+                          <Label className="text-sm font-medium text-gray-500">Авито аккаунт</Label>
                           <Input 
                             value={selectedOrder.avitoName || ''} 
                             onChange={(e) => setSelectedOrder({...selectedOrder, avitoName: e.target.value})}
                             className="mt-1"
+                            placeholder="Название аккаунта Авито"
                           />
                         </div>
                       </CardContent>
@@ -1766,9 +1771,10 @@ function OrdersContent() {
                         <div>
                           <Label className="text-sm font-medium text-gray-500">Имя мастера</Label>
                           <Input 
-                            value={selectedOrder.avitoName || ''} 
-                            disabled={userRole === 'operator'}
+                            value={selectedOrder.master?.name || ''} 
+                            disabled
                             className="mt-1"
+                            placeholder="Не назначен"
                           />
                         </div>
                         <div>
@@ -1776,8 +1782,9 @@ function OrdersContent() {
                           <Input 
                             type="number"
                             value={selectedOrder.masterId || ''} 
-                            disabled={userRole === 'operator'}
+                            onChange={(e) => setSelectedOrder({...selectedOrder, masterId: e.target.value ? parseInt(e.target.value) : undefined})}
                             className="mt-1"
+                            placeholder="Введите ID мастера"
                           />
                         </div>
                       </div>
