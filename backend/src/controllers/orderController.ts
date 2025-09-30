@@ -661,7 +661,7 @@ export const orderController = {
 
       logger.info(`Получен список заказов: страница ${pageNum}, всего ${total}`, {
         userId: req.user?.id,
-        filters: { status, city, rk, operatorId, dateFrom, dateTo }
+        filters: { status, city, master, operatorId, dateFrom, dateTo, closingDate }
       });
 
     } catch (error) {
