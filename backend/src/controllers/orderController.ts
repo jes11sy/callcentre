@@ -475,12 +475,13 @@ export const orderController = {
         sortOrder = 'desc',
         status,
         city,
-        rk,
+        master,
         operatorId,
         dateFrom,
         dateTo,
         search,
-        avitoChatId
+        avitoChatId,
+        closingDate
       } = req.query;
 
       // Построение условий фильтрации
@@ -497,9 +498,9 @@ export const orderController = {
         };
       }
 
-      if (rk) {
-        where.rk = {
-          contains: rk as string,
+      if (master) {
+        where.avitoName = {
+          contains: master as string,
           mode: 'insensitive'
         };
       }
@@ -512,6 +513,17 @@ export const orderController = {
 
       if (avitoChatId) {
         where.avitoChatId = avitoChatId as string;
+      }
+
+      if (closingDate) {
+        const filterDate = new Date(closingDate as string);
+        const startOfDay = new Date(filterDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(filterDate.setHours(23, 59, 59, 999));
+        
+        where.closingData = {
+          gte: startOfDay,
+          lte: endOfDay
+        };
       }
 
       if (dateFrom || dateTo) {

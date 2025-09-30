@@ -141,7 +141,8 @@ function OrdersContent() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
-  const [rkFilter, setRkFilter] = useState('');
+  const [masterFilter, setMasterFilter] = useState('');
+  const [closingDateFilter, setClosingDateFilter] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [orderCalls, setOrderCalls] = useState<any[]>([]);
@@ -182,7 +183,7 @@ function OrdersContent() {
 
   // Получение списка заказов (все заказы для всех пользователей)
   const { data: ordersData, isLoading, error } = useQuery<OrdersResponse>({
-    queryKey: ['orders', page, limit, search, statusFilter, cityFilter, rkFilter, userData?.id, userData?.role],
+    queryKey: ['orders', page, limit, search, statusFilter, cityFilter, masterFilter, closingDateFilter, userData?.id, userData?.role],
     queryFn: async () => {
       // Не выполняем запрос, пока не загружены данные пользователя
       if (!userData) {
@@ -196,7 +197,8 @@ function OrdersContent() {
         ...(search && { search }),
         ...(statusFilter && statusFilter !== 'all' && { status: statusFilter }),
         ...(cityFilter && { city: cityFilter }),
-        ...(rkFilter && { rk: rkFilter }),
+        ...(masterFilter && { master: masterFilter }),
+        ...(closingDateFilter && { closingDate: closingDateFilter }),
         // Все пользователи видят все заказы
         // ...(userId && userRole === 'operator' && { operatorId: userId.toString() })
         // Сортировка всегда по дате встречи и статусу "Ожидает" - не передаем параметры сортировки
@@ -583,7 +585,7 @@ function OrdersContent() {
           
           <Card>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="status">Статус</Label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -615,12 +617,22 @@ function OrdersContent() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="rk">РК</Label>
+                  <Label htmlFor="master">Мастер</Label>
                   <Input
-                    id="rk"
-                    placeholder="Фильтр по РК"
-                    value={rkFilter}
-                    onChange={(e) => setRkFilter(e.target.value)}
+                    id="master"
+                    placeholder="Поиск по мастеру"
+                    value={masterFilter}
+                    onChange={(e) => setMasterFilter(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="closingDate">Дата закрытия</Label>
+                  <Input
+                    id="closingDate"
+                    type="date"
+                    value={closingDateFilter}
+                    onChange={(e) => setClosingDateFilter(e.target.value)}
                   />
                 </div>
               </div>
@@ -812,6 +824,7 @@ function OrdersContent() {
                     <TableHead className="w-32">Клиент</TableHead>
                     <TableHead className="w-40">Адрес</TableHead>
                     <TableHead className="w-28">Дата встречи</TableHead>
+                    <TableHead className="w-28">Дата закрытия</TableHead>
                     <TableHead className="w-28">Тип техники</TableHead>
                     <TableHead className="w-40">Проблема</TableHead>
                     <TableHead className="w-24">Статус</TableHead>
@@ -855,6 +868,11 @@ function OrdersContent() {
                       <TableCell>
                         <div className="text-sm whitespace-nowrap">
                           {formatDate(order.dateMeeting)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm whitespace-nowrap">
+                          {order.closingData ? formatDate(order.closingData) : <span className="text-gray-400">Не закрыт</span>}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1572,7 +1590,7 @@ function OrdersContent() {
                           <Label className="text-sm font-medium text-gray-500">Имя мастера</Label>
                           <Input 
                             value={selectedOrder.avitoName || ''} 
-                            disabled={userRole === 'operator'}
+                            onChange={(e) => setSelectedOrder({...selectedOrder, avitoName: e.target.value})}
                             className="mt-1"
                           />
                         </div>
@@ -1663,7 +1681,6 @@ function OrdersContent() {
                           <Select 
                             value={selectedOrder.statusOrder} 
                             onValueChange={(value: string) => setSelectedOrder({...selectedOrder, statusOrder: value})}
-                            disabled={userRole === 'operator'}
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue />
