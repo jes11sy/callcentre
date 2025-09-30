@@ -6,14 +6,20 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function Home() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (isLoading) return;
+    
     if (user) {
-      // Redirect to telephony page for operators
+      // Redirect to telephony page for authenticated users
       router.push('/telephony');
+    } else {
+      // Redirect to login page for unauthenticated users
+      router.push('/login');
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   // Show loading while redirecting
   return (
