@@ -187,12 +187,6 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
     });
   };
 
-  // Get minimum date for meeting (today)
-  const getMinMeetingDate = () => {
-    const today = new Date();
-    return today.toISOString().slice(0, 16);
-  };
-
   // Type order labels
   const typeOrderLabels = {
     first_time: 'Впервые',
@@ -449,7 +443,6 @@ export function CreateOrderModal({ call, open, onOpenChange, onOrderCreated }: C
                     <Input
                       id="dateMeeting"
                       type="datetime-local"
-                      min={getMinMeetingDate()}
                       className="h-11"
                       {...register('dateMeeting')}
                     />

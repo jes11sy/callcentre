@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -126,21 +126,6 @@ export default function CreateOrderModal({
       setIsSubmitting(false);
     }
   };
-
-  const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().slice(0, 16);
-  };
-
-  useEffect(() => {
-    if (open) {
-      // Set default meeting date to tomorrow at 12:00
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(12, 0, 0, 0);
-      setValue('dateMeeting', tomorrow.toISOString().slice(0, 16));
-    }
-  }, [open, setValue]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -370,7 +355,6 @@ export default function CreateOrderModal({
                   <Input
                     id="dateMeeting"
                     type="datetime-local"
-                    min={getMinDate()}
                     {...register('dateMeeting')}
                     className={`h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors ${errors.dateMeeting ? 'border-red-500' : ''}`}
                   />

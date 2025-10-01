@@ -154,12 +154,6 @@ export function CreateOrderFromChatModal({ chat, open, onOpenChange, onOrderCrea
     onOpenChange(false);
   };
 
-  // Get minimum date for meeting (today)
-  const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
-  };
-
   // Auto-fill form when chat changes
   React.useEffect(() => {
     if (chat && open) {
@@ -167,12 +161,6 @@ export function CreateOrderFromChatModal({ chat, open, onOpenChange, onOrderCrea
       if (chat.users && chat.users.length > 0) {
         setValue('clientName', chat.users[0].name);
       }
-      
-      // Set default meeting date to tomorrow at 12:00
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(12, 0, 0, 0);
-      setValue('dateMeeting', tomorrow.toISOString().slice(0, 16));
     }
   }, [chat, open, setValue]);
 
@@ -413,7 +401,6 @@ export function CreateOrderFromChatModal({ chat, open, onOpenChange, onOrderCrea
                   <Input
                     id="dateMeeting"
                     type="datetime-local"
-                    min={getMinDate()}
                     {...register('dateMeeting')}
                     className={`h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors ${errors.dateMeeting ? 'border-red-500' : ''}`}
                   />
