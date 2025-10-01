@@ -393,7 +393,7 @@ export const orderController = {
         data: {
           rk,
           city,
-          avitoName,
+          avitoName: avitoName && avitoName !== 'null' ? avitoName : undefined,
           phone,
           typeOrder,
           clientName,
