@@ -334,9 +334,14 @@ export function CreateOrderFromChatModal({ chat, open, onOpenChange, onOrderCrea
                   <Input
                     id="phone"
                     {...register('phone')}
-                    placeholder="Введите номер телефона"
+                    placeholder="79539979467"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      setValue('phone', value);
+                    }}
                     className={`h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors ${errors.phone ? 'border-red-500' : ''}`}
                   />
+                  <p className="text-xs text-gray-500">Формат: только цифры (например, 79539979467)</p>
                   {errors.phone && (
                     <p className="text-sm text-red-500 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
