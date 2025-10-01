@@ -75,6 +75,9 @@ services:
       ENABLE_DEBUG_LOGS: true
       ENABLE_VERBOSE_LOGGING: true
       DISABLE_RATE_LIMITING: true
+      # Bot Integration
+      BOT_WEBHOOK_URL: ${STAGING_BOT_WEBHOOK_URL}
+      WEBHOOK_TOKEN: ${STAGING_WEBHOOK_TOKEN}
       
     volumes:
       - ./ssl:/etc/ssl/certs/callcentre:ro

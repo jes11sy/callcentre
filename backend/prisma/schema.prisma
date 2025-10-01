@@ -211,16 +211,17 @@ model Master {
 }
 
 model Cash {
-  id          Int      @id @default(autoincrement())
-  name        String   // "приход" или "расход"
-  amount      Decimal  @db.Decimal(10, 2)
-  city        String?  @default("Москва")
-  note        String?
-  receiptDoc  String?  @map("receipt_doc")
-  dateCreate  DateTime @default(now()) @map("date_create")
-  nameCreate  String   @map("name_create")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  name           String   // "приход" или "расход"
+  amount         Decimal  @db.Decimal(10, 2)
+  city           String?  @default("Москва")
+  note           String?
+  receiptDoc     String?  @map("receipt_doc")
+  paymentPurpose String?  @map("payment_purpose") // назначение платежа
+  dateCreate     DateTime @default(now()) @map("date_create")
+  nameCreate     String   @map("name_create")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("cash")
 }

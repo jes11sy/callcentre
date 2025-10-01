@@ -44,6 +44,9 @@ services:
       S3_REGION: ru-1
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      # Bot Integration
+      BOT_WEBHOOK_URL: ${BOT_WEBHOOK_URL}
+      WEBHOOK_TOKEN: ${WEBHOOK_TOKEN}
     volumes:
       - ./ssl:/etc/ssl/certs/callcentre:ro
       - backend_uploads:/app/uploads
