@@ -40,8 +40,7 @@ const orderSchema = z.object({
     required_error: 'Тип техники обязателен'
   }),
   problem: z.string().min(1, 'Описание проблемы обязательно'),
-  callRecord: z.string().optional(),
-  masterId: z.number().optional()
+  
 });
 
 type OrderFormData = z.infer<typeof orderSchema>;
@@ -374,34 +373,7 @@ export default function CreateOrderModal({
                   )}
                 </div>
 
-                {/* Запись звонка */}
-                <div className="space-y-2">
-                  <Label htmlFor="callRecord" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    URL записи звонка
-                  </Label>
-                  <Input
-                    id="callRecord"
-                    {...register('callRecord')}
-                    placeholder="Введите URL записи звонка"
-                    className="h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                {/* ID мастера */}
-                <div className="space-y-2">
-                  <Label htmlFor="masterId" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    ID мастера
-                  </Label>
-                  <Input
-                    id="masterId"
-                    type="number"
-                    {...register('masterId', { valueAsNumber: true })}
-                    placeholder="Введите ID мастера"
-                    className="h-10 border-2 hover:border-blue-300 focus:border-blue-500 transition-colors"
-                  />
-                </div>
+                
 
                 {/* Описание проблемы */}
                 <div className="space-y-2">

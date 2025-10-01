@@ -44,8 +44,6 @@ interface CreateOrderRequest {
   dateMeeting: string;
   typeEquipment: 'КП' | 'БТ' | 'МНЧ';
   problem: string;
-  callRecord?: string;
-  masterId?: number;
   operatorNameId: number;
 }
 
@@ -351,8 +349,6 @@ export const orderController = {
         dateMeeting,
         typeEquipment,
         problem,
-        callRecord,
-        masterId,
         operatorNameId
       }: CreateOrderRequest = req.body;
 
@@ -405,9 +401,7 @@ export const orderController = {
           dateMeeting: new Date(dateMeeting),
           typeEquipment,
           problem,
-          callRecord,
           statusOrder: 'Ожидает',
-          masterId,
           operatorNameId,
           createDate: new Date()
         },
