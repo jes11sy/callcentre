@@ -70,7 +70,6 @@ export function Header({ variant = 'operator' }: HeaderProps) {
           const data = await response.json();
           if (data.statusWork) {
             setWorkStatus(data.statusWork);
-            console.log('Loaded work status from DB:', data.statusWork);
           }
         }
       } catch (error) {

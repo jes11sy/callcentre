@@ -504,17 +504,6 @@ function OrdersContent() {
     });
   };
 
-  // Отладочная информация
-  console.log('OrdersPage render:', {
-    authLoading,
-    userData,
-    userRole,
-    isAuthenticated,
-    ordersData,
-    isLoading,
-    error
-  });
-
   // Показываем загрузку, пока не получены данные пользователя
   if (authLoading || !userData) {
     return (
