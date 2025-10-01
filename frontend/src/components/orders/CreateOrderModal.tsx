@@ -82,7 +82,16 @@ export default function CreateOrderModal({
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         },
         body: JSON.stringify({
-          ...data,
+          rk: data.rk,
+          city: data.city,
+          avitoName: data.avitoName,
+          phone: data.phone,
+          typeOrder: data.typeOrder,
+          clientName: data.clientName,
+          address: data.address,
+          dateMeeting: data.dateMeeting,
+          typeEquipment: data.typeEquipment,
+          problem: data.problem,
           operatorNameId: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).id : 0
         })
       });
