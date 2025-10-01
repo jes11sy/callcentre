@@ -75,7 +75,7 @@ export default function CreateOrderModal({
   // Создание заказа
   const createOrderMutation = useMutation({
     mutationFn: async (data: OrderFormData) => {
-      const response = await fetch('/api/orders', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
