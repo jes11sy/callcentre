@@ -65,7 +65,6 @@ model Avito {
   isOnline                Boolean?  @default(false) @map("is_online")
   lastOnlineCheck         DateTime? @map("last_online_check")
   onlineKeepAliveInterval Int?      @default(300) @map("online_keep_alive_interval")
-  calls                   Call[]
   orders                  Order[]
 
   @@map("avito")
@@ -150,7 +149,6 @@ model Call {
   recordingEmailSent   Boolean            @default(false) @map("recording_email_sent")
   recordingPath        String?            @map("recording_path")
   recordingProcessedAt DateTime?          @map("recording_processed_at")
-  avito                Avito?             @relation(fields: [avitoName], references: [name])
   mango                Mango?             @relation(fields: [mangoCallId], references: [id])
   operator             CallcentreOperator @relation(fields: [operatorId], references: [id])
   phone                Phone              @relation(fields: [phoneAts], references: [number])
