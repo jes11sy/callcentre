@@ -1289,20 +1289,24 @@ export default function MessagesPage() {
                                         {formatTimestamp(message.created)}
                                       </span>
                                     </div>
-                                  ) : message.type === 'voice' && message.voiceUrl ? (
+                                  ) : message.type === 'voice' ? (
                                     <div className="space-y-2">
                                       <div className="flex items-center gap-2">
                                         <Mic className="h-4 w-4" />
                                         <span className="text-sm">Голосовое сообщение</span>
                                       </div>
-                                      <audio 
-                                        controls 
-                                        className="w-full max-w-xs"
-                                        preload="metadata"
-                                      >
-                                        <source src={message.voiceUrl} type="audio/mp4" />
-                                        Ваш браузер не поддерживает аудио элемент.
-                                      </audio>
+                                      {message.voiceUrl ? (
+                                        <audio 
+                                          controls 
+                                          className="w-full max-w-xs"
+                                          preload="metadata"
+                                        >
+                                          <source src={message.voiceUrl} type="audio/mp4" />
+                                          Ваш браузер не поддерживает аудио элемент.
+                                        </audio>
+                                      ) : (
+                                        <p className="text-xs opacity-75">Загрузка...</p>
+                                      )}
                                       <span className={cn(
                                         "text-xs mt-1 block text-right",
                                         message.direction === 'out' 
@@ -1315,7 +1319,7 @@ export default function MessagesPage() {
                                   ) : (
                                     <div>
                                       <p className="text-sm leading-relaxed break-words pr-16">
-                                        {message.content?.text || 'NO TEXT'}
+                                        {message.content?.text || message.text || '[Сообщение без текста]'}
                                       </p>
                                       <span className={cn(
                                         "text-xs mt-1 block text-right",
