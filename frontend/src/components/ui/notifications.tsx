@@ -2,6 +2,7 @@
 
 import { toast } from 'sonner';
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { playNotificationSound, playMessageSound, playErrorSound } from '@/lib/sound';
 
 export interface NotificationOptions {
   title?: string;
@@ -15,6 +16,7 @@ export interface NotificationOptions {
 
 class NotificationService {
   success(message: string, options?: NotificationOptions) {
+    playNotificationSound();
     toast.success(message, {
       description: options?.description,
       duration: options?.duration || 4000,
@@ -26,6 +28,7 @@ class NotificationService {
   }
 
   error(message: string, options?: NotificationOptions) {
+    playErrorSound();
     toast.error(message, {
       description: options?.description,
       duration: options?.duration || 6000,
@@ -37,6 +40,7 @@ class NotificationService {
   }
 
   warning(message: string, options?: NotificationOptions) {
+    playNotificationSound();
     toast.warning(message, {
       description: options?.description,
       duration: options?.duration || 5000,
@@ -48,6 +52,7 @@ class NotificationService {
   }
 
   info(message: string, options?: NotificationOptions) {
+    playMessageSound();
     toast.info(message, {
       description: options?.description,
       duration: options?.duration || 4000,

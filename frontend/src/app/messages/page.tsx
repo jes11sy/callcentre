@@ -62,6 +62,8 @@ import { cn } from '@/lib/utils';
 import { CreateOrderFromChatModal } from '@/components/messages/CreateOrderFromChatModal';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
+import { playMessageSound } from '@/lib/sound';
+import { SoundSettings } from '@/components/ui/sound-settings';
 
 // Types
 interface AvitoAccount {
@@ -192,6 +194,7 @@ export default function MessagesPage() {
   // Dialog states (removed showMessageDialog as we now use inline chat)
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
   const [showLinkedOrdersModal, setShowLinkedOrdersModal] = useState(false);
+  const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [selectedChatForOrder, setSelectedChatForOrder] = useState<AvitoChat | null>(null);
   const [linkedOrders, setLinkedOrders] = useState<LinkedOrder[]>([]);
   const [linkedOrdersLoading, setLinkedOrdersLoading] = useState(false);
@@ -696,11 +699,8 @@ export default function MessagesPage() {
       return '';
     }
     try {
-      // Проверяем, является ли timestamp уже в миллисекундах (больше 1e12)
-      // или в секундах (меньше 1e12)
-      const date = timestamp > 1e12 
-        ? new Date(timestamp) 
-        : new Date(timestamp * 1000);
+      // Timestamp приходит в секундах, конвертируем в миллисекунды
+      const date = new Date(timestamp * 1000);
       
       // Проверяем, что дата валидна
       if (isNaN(date.getTime())) {
@@ -781,11 +781,19 @@ export default function MessagesPage() {
 
   // Setup Socket.IO listeners for real-time updates
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('❌ Socket not connected');
+      return;
+    }
+
+    console.log('✅ Socket connected, setting up listeners');
 
     // Handle new message from webhook
     socket.on('avito-new-message', (data: { chatId: string; message: any }) => {
       console.log('🔔 New message from webhook:', data);
+      
+      // Воспроизводим звук нового сообщения
+      playMessageSound();
       
       // If it's the currently open chat, add message to the list
       if (selectedChat && selectedChat.id === data.chatId) {
@@ -814,7 +822,7 @@ export default function MessagesPage() {
         )
       );
       
-      // Show notification
+      // Show notification (звук уже воспроизведен выше)
       notifications.info('Новое сообщение в чате Авито');
     });
 
@@ -884,7 +892,11 @@ export default function MessagesPage() {
               <RefreshCw className={cn("h-4 w-4", chatsLoading && "animate-spin")} />
               Обновить
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowSoundSettings(true)}
+            >
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -1477,6 +1489,22 @@ export default function MessagesPage() {
           setShowCreateOrderModal(false);
         }}
       />
+
+      {/* Sound Settings Modal */}
+      <Dialog open={showSoundSettings} onOpenChange={setShowSoundSettings}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Настройки звука
+            </DialogTitle>
+            <DialogDescription>
+              Управление звуковыми уведомлениями для новых сообщений
+            </DialogDescription>
+          </DialogHeader>
+          <SoundSettings />
+        </DialogContent>
+      </Dialog>
 
       {/* Linked Orders Modal */}
       <Dialog open={showLinkedOrdersModal} onOpenChange={setShowLinkedOrdersModal}>

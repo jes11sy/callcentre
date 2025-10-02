@@ -63,6 +63,7 @@ import { LoadingState, LoadingSpinner, TableSkeleton } from '@/components/ui/loa
 import { ErrorBoundary, ErrorMessage, EmptyState } from '@/components/ui/error-boundary';
 import { notifications } from '@/components/ui/notifications';
 import { SpotifyAudioPlayer } from '@/components/ui/spotify-audio-player';
+import { useSocket } from '@/hooks/useSocket';
 
 // Types
 interface Call {
@@ -138,6 +139,7 @@ const filtersSchema = z.object({
 export default function TelephonyPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const socket = useSocket();
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,11 +173,10 @@ export default function TelephonyPage() {
   const [orderHistory, setOrderHistory] = useState<any[]>([]);
   const [orderHistoryLoading, setOrderHistoryLoading] = useState(false);
   const [emailCheckLoading, setEmailCheckLoading] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastCallCount, setLastCallCount] = useState(0);
   const [newCallsCount, setNewCallsCount] = useState(0);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [socketConnected, setSocketConnected] = useState(false);
 
   const {
     register,
@@ -223,27 +224,66 @@ export default function TelephonyPage() {
     setExpandedGroups(newExpanded);
   };
 
-  // Auto-refresh effect
+  // Manual refresh function - load only new calls
+  const handleManualRefresh = () => {
+    // Reset to first page to show latest calls
+    setCurrentPage(1);
+    fetchCalls(watchedFilters, 1);
+  };
+
+  // Setup Socket.IO listeners for real-time call updates
   useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(() => {
-        fetchCalls(watchedFilters, currentPage);
-      }, 5000); // Обновляем каждые 5 секунд
-      
-      setRefreshInterval(interval);
-      
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
-    } else {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-        setRefreshInterval(null);
-      }
+    if (!socket) {
+      console.log('❌ Socket not connected for telephony');
+      setSocketConnected(false);
+      return;
     }
-  }, [autoRefresh]); // Убираем watchedFilters и currentPage из зависимостей
+
+    console.log('✅ Socket connected for telephony, setting up listeners');
+    setSocketConnected(true);
+
+    // Listen for connection status
+    socket.on('connect', () => {
+      setSocketConnected(true);
+    });
+
+    socket.on('disconnect', () => {
+      setSocketConnected(false);
+    });
+
+    // Handle new call from Mango webhook
+    socket.on('mango-new-call', (data: { call: Call }) => {
+      console.log('📞 New call from Mango webhook:', data);
+      
+      // Add new call to the beginning of the list
+      setCalls(prevCalls => [data.call, ...prevCalls]);
+      
+      // Update call count
+      setTotalCalls(prev => prev + 1);
+      setNewCallsCount(prev => prev + 1);
+      
+      // Show notification
+      notifications.info('Новый звонок получен');
+    });
+
+    // Handle call update from Mango webhook
+    socket.on('mango-call-updated', (data: { callId: number; call: Call }) => {
+      console.log('📞 Call updated from Mango webhook:', data);
+      
+      // Update call in the list
+      setCalls(prevCalls => 
+        prevCalls.map(call => 
+          call.id === data.callId ? data.call : call
+        )
+      );
+    });
+
+    // Cleanup
+    return () => {
+      socket.off('mango-new-call');
+      socket.off('mango-call-updated');
+    };
+  }, [socket]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -613,35 +653,18 @@ export default function TelephonyPage() {
               </div>
             <p className="text-muted-foreground">
               Управление звонками и создание заказов
-                {autoRefresh && (
-                  <span className="ml-2 text-green-600 text-sm">
-                    • Обновляется автоматически
-                  </span>
-                )}
+              {socketConnected && (
+                <span className="ml-2 text-green-600 text-sm">
+                  • Real-time подключен
+                </span>
+              )}
             </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant={autoRefresh ? "default" : "outline"}
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={autoRefresh ? "bg-green-600 hover:bg-green-700" : ""}
-            >
-              {autoRefresh ? (
-                <>
-                  <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
-                  Авто-обновление
-                </>
-              ) : (
-                <>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full mr-2" />
-                  Авто-обновление
-                </>
-              )}
-            </Button>
-            <Button
               variant="outline"
-              onClick={() => fetchCalls(watchedFilters, currentPage)}
+              onClick={handleManualRefresh}
               disabled={loading}
             >
               {loading ? (

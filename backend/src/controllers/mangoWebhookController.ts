@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../config/logger';
+import { getSocketIO } from '../config/socket';
 
 const prisma = new PrismaClient();
 
@@ -320,14 +321,53 @@ async function handleCallEnd(webhookData: any) {
 
     if (existingCall) {
       // Обновляем существующую запись
-      await prisma.call.update({
+      const updatedCall = await prisma.call.update({
         where: { id: existingCall.id },
         data: {
           status: callStatus
+        },
+        include: {
+          operator: {
+            select: {
+              id: true,
+              name: true,
+              login: true
+            }
+          },
+          mango: true
         }
       });
       
       logger.info(`Обновлен звонок ID: ${existingCall.id}`);
+
+      // Broadcast call update to all connected operators via Socket.IO
+      try {
+        const io = getSocketIO();
+        io.emit('mango-call-updated', {
+          callId: updatedCall.id,
+          call: {
+            id: updatedCall.id,
+            rk: updatedCall.rk,
+            city: updatedCall.city,
+            avitoName: updatedCall.avitoName,
+            phoneClient: updatedCall.phoneClient,
+            phoneAts: updatedCall.phoneAts,
+            dateCreate: updatedCall.dateCreate.toISOString(),
+            status: updatedCall.status,
+            recordingPath: updatedCall.recordingPath,
+            recordingEmailSent: updatedCall.recordingEmailSent,
+            recordingProcessedAt: updatedCall.recordingProcessedAt?.toISOString(),
+            operator: updatedCall.operator,
+            avito: updatedCall.avito,
+            phone: updatedCall.phone,
+            mango: updatedCall.mango
+          }
+        });
+        
+        logger.info('✅ Broadcasted call update event to operators');
+      } catch (error) {
+        logger.error('Error broadcasting call update:', error);
+      }
     } else {
       // Создаем новую запись звонка
       const callData = await prepareCallData({
@@ -353,6 +393,34 @@ async function handleCallEnd(webhookData: any) {
       });
 
       logger.info(`Создан новый звонок ID: ${call.id} для ${phoneClient}`);
+
+      // Broadcast new call to all connected operators via Socket.IO
+      try {
+        const io = getSocketIO();
+        io.emit('mango-new-call', {
+          call: {
+            id: call.id,
+            rk: call.rk,
+            city: call.city,
+            avitoName: call.avitoName,
+            phoneClient: call.phoneClient,
+            phoneAts: call.phoneAts,
+            dateCreate: call.dateCreate.toISOString(),
+            status: call.status,
+            recordingPath: call.recordingPath,
+            recordingEmailSent: call.recordingEmailSent,
+            recordingProcessedAt: call.recordingProcessedAt?.toISOString(),
+            operator: call.operator,
+            avito: call.avito,
+            phone: call.phone,
+            mango: call.mango
+          }
+        });
+        
+        logger.info('✅ Broadcasted new call event to operators');
+      } catch (error) {
+        logger.error('Error broadcasting new call:', error);
+      }
     }
   } catch (error) {
     logger.error('Ошибка при обработке завершения звонка:', error);
