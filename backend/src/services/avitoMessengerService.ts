@@ -430,17 +430,24 @@ export class AvitoMessengerService {
    */
   async getVoiceFileUrls(voiceIds: string[]): Promise<Record<string, string>> {
     try {
+      // Avito expects voice_ids as array in query params
+      // Format: ?voice_ids=id1&voice_ids=id2&voice_ids=id3
+      const params = new URLSearchParams();
+      voiceIds.forEach(id => params.append('voice_ids', id));
+      
       const response = await this.api.get(
-        `/messenger/v1/accounts/${this.config.userId}/getVoiceFiles`,
-        {
-          params: { voice_ids: voiceIds }
-        }
+        `/messenger/v1/accounts/${this.config.userId}/getVoiceFiles?${params.toString()}`
       );
       
       logger.info(`Retrieved voice file URLs for ${voiceIds.length} voice messages`);
       return response.data.voices_urls || {};
-    } catch (error) {
-      logger.error(`Error getting voice file URLs:`, error);
+    } catch (error: any) {
+      logger.error(`Error getting voice file URLs:`, {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        voiceIds
+      });
       throw error;
     }
   }

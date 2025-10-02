@@ -7,18 +7,24 @@ export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
+    console.log('🔌 Initializing Socket.IO connection to:', SOCKET_URL);
+    
     // Initialize socket connection
     socketRef.current = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
       withCredentials: true,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: Infinity
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: 5, // Limit attempts to avoid infinite retries
+      timeout: 10000, // 10 second timeout
+      autoConnect: true,
+      forceNew: false
     });
 
     socketRef.current.on('connect', () => {
       console.log('✅ Socket.IO connected:', socketRef.current?.id);
+      console.log('   Transport:', socketRef.current?.io.engine.transport.name);
     });
 
     socketRef.current.on('disconnect', (reason) => {
@@ -26,12 +32,21 @@ export const useSocket = () => {
     });
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error);
+      console.warn('⚠️ Socket.IO connection error (это нормально, работает polling):', error.message);
+    });
+
+    socketRef.current.on('reconnect_attempt', (attemptNumber) => {
+      console.log('🔄 Socket.IO reconnect attempt:', attemptNumber);
+    });
+
+    socketRef.current.on('reconnect_failed', () => {
+      console.error('❌ Socket.IO reconnect failed after all attempts');
     });
 
     // Cleanup on unmount
     return () => {
       if (socketRef.current) {
+        console.log('🔌 Disconnecting Socket.IO');
         socketRef.current.disconnect();
       }
     };

@@ -355,7 +355,8 @@ export default function MessagesPage() {
       if (response.data.success) {
         const newChats = response.data.data.chats;
         
-        console.log('📝 Processing chats - checking unread status for all chats');
+        console.log('📝 Processing chats:', newChats.length);
+        console.log('📝 First chat sample:', newChats[0]);
 
         // Set chats first
         const updatedChats = newChats.map((chat: AvitoChat) => {
@@ -651,7 +652,10 @@ export default function MessagesPage() {
   };
 
   // Utility functions
-  const formatTimestamp = (timestamp: number) => {
+  const formatTimestamp = (timestamp: number | undefined) => {
+    if (!timestamp || timestamp === 0) {
+      return '';
+    }
     return new Date(timestamp * 1000).toLocaleString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
