@@ -181,6 +181,7 @@ export default function MessagesPage() {
   const [chatsLoading, setChatsLoading] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [isLoadingChats, setIsLoadingChats] = useState(false);
   
   // Auto-refresh states
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
@@ -263,7 +264,14 @@ export default function MessagesPage() {
 
   // Load chats from all accounts
   const loadChatsFromAllAccounts = async (silent = false) => {
+    // Предотвращаем параллельные загрузки
+    if (isLoadingChats) {
+      console.log('⏸️ Skipping loadChatsFromAllAccounts - already loading');
+      return;
+    }
+    
     try {
+      setIsLoadingChats(true);
       if (!silent) {
         setChatsLoading(true);
       }
@@ -304,12 +312,20 @@ export default function MessagesPage() {
       
       // Дедупликация по уникальному ключу (chat.id + avitoAccountName)
       const uniqueChatsMap = new Map<string, AvitoChat>();
+      const duplicates: string[] = [];
+      
       allChats.forEach((chat: AvitoChat) => {
         const uniqueKey = `${chat.id}_${chat.avitoAccountName}`;
-        if (!uniqueChatsMap.has(uniqueKey)) {
+        if (uniqueChatsMap.has(uniqueKey)) {
+          duplicates.push(`Дубль: ${chat.users[0]?.name} (${chat.avitoAccountName}) - ID: ${chat.id}`);
+        } else {
           uniqueChatsMap.set(uniqueKey, chat);
         }
       });
+      
+      if (duplicates.length > 0) {
+        console.error('🔴 НАЙДЕНЫ ДУБЛИ:', duplicates);
+      }
       
       // Convert back to array and sort by last message time
       const uniqueChats = Array.from(uniqueChatsMap.values())
@@ -337,6 +353,7 @@ export default function MessagesPage() {
         notifications.error('Ошибка при загрузке чатов');
       }
     } finally {
+      setIsLoadingChats(false);
       if (!silent) {
         setChatsLoading(false);
       }
@@ -352,7 +369,14 @@ export default function MessagesPage() {
       return loadChatsFromAllAccounts(silent);
     }
     
+    // Предотвращаем параллельные загрузки
+    if (isLoadingChats) {
+      console.log('⏸️ Skipping loadChats - already loading');
+      return;
+    }
+    
     try {
+      setIsLoadingChats(true);
       if (!silent) {
         setChatsLoading(true);
       }
@@ -396,6 +420,7 @@ export default function MessagesPage() {
         notifications.error('Ошибка при загрузке чатов');
       }
     } finally {
+      setIsLoadingChats(false);
       if (!silent) {
         setChatsLoading(false);
       }
@@ -667,15 +692,20 @@ export default function MessagesPage() {
 
   // Utility functions
   const formatTimestamp = (timestamp: number | undefined) => {
-    if (!timestamp || timestamp === 0) {
+    if (!timestamp) {
       return '';
     }
-    return new Date(timestamp * 1000).toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(timestamp * 1000).toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      console.error('Error formatting timestamp:', timestamp, e);
+      return '';
+    }
   };
 
   const getMessageIcon = (type: string) => {
@@ -1043,8 +1073,11 @@ export default function MessagesPage() {
                           </h3>
                           <span className="text-xs text-gray-500 ml-2 font-medium whitespace-nowrap">
                             {(() => {
-                              const timestamp = chat.lastMessage?.created || (chat as any).last_message?.created || chat.updated;
-                              return formatTimestamp(timestamp);
+                              const timeText = formatTimestamp(chat.updated);
+                              if (!timeText) {
+                                console.warn('⚠️ Empty time for chat:', chat.id, 'updated:', chat.updated);
+                              }
+                              return timeText;
                             })()}
                           </span>
                         </div>
