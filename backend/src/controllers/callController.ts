@@ -150,12 +150,6 @@ export const callController = {
                 login: true
               }
             },
-            avito: {
-              select: {
-                id: true,
-                name: true
-              }
-            },
             phone: {
               select: {
                 id: true,
