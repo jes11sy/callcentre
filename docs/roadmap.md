@@ -167,6 +167,7 @@
 - [X] Создать подробную инструкцию по настройке webhook в панели Mango Office
 - [X] Исправить проблему с rate limiting в nginx для webhook endpoints Mango Office
 - [X] Исправить ошибку Foreign Key Constraint при создании звонков - убрать неправильную связь от calls.avito_name к avito.name
+- [X] Увеличить диапазон поиска звонков для привязки аудиозаписей с ±2 до ±5 минут
 
 ## Этап 7: Статистика сотрудника
 
