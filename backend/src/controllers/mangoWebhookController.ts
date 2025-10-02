@@ -335,7 +335,6 @@ async function handleCallEnd(webhookData: any) {
             }
           },
           mango: true,
-          avito: true,
           phone: true
         }
       });
@@ -391,7 +390,6 @@ async function handleCallEnd(webhookData: any) {
             }
           },
           mango: true,
-          avito: true,
           phone: true
         }
       });
@@ -415,7 +413,6 @@ async function handleCallEnd(webhookData: any) {
             recordingEmailSent: call.recordingEmailSent,
             recordingProcessedAt: call.recordingProcessedAt?.toISOString(),
             operator: call.operator,
-            avito: call.avito,
             phone: call.phone,
             mango: call.mango
           }
