@@ -416,7 +416,7 @@ export class AvitoMessengerService {
   async markMessagesAsRead(chatId: string): Promise<void> {
     try {
       await this.api.post(
-        `/messenger/v3/accounts/${this.config.userId}/chats/${chatId}/read`
+        `/messenger/v1/accounts/${this.config.userId}/chats/${chatId}/read`
       );
       logger.info(`Messages marked as read for chat ${chatId}`);
     } catch (error) {

@@ -929,8 +929,8 @@ export default function MessagesPage() {
                           <h3 className="font-medium text-sm truncate">
                             {chat.users[0]?.name || 'Неизвестный пользователь'}
                           </h3>
-                          <span className="text-xs text-gray-500 ml-2">
-                            {formatTimestamp(chat.updated)}
+                          <span className="text-xs text-gray-500 ml-2 font-medium whitespace-nowrap">
+                            {formatTimestamp(chat.lastMessage?.created || chat.updated)}
                           </span>
                         </div>
 
