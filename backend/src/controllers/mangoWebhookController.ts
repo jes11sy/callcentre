@@ -359,7 +359,6 @@ async function handleCallEnd(webhookData: any) {
             recordingEmailSent: updatedCall.recordingEmailSent,
             recordingProcessedAt: updatedCall.recordingProcessedAt?.toISOString(),
             operator: updatedCall.operator,
-            avito: updatedCall.avito,
             phone: updatedCall.phone,
             mango: updatedCall.mango
           }
