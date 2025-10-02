@@ -1311,25 +1311,39 @@ export default function MessagesPage() {
                                       </span>
                                     </div>
                                   ) : message.type === 'voice' ? (
-                                    <div className="space-y-2">
-                                      <div className="flex items-center gap-2">
-                                        <Mic className="h-4 w-4" />
-                                        <span className="text-sm">Голосовое сообщение</span>
+                                    <div className="space-y-3 min-w-[280px]">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className={cn(
+                                          "rounded-full p-2",
+                                          message.direction === 'out' 
+                                            ? "bg-blue-600" 
+                                            : "bg-gray-200"
+                                        )}>
+                                          <Mic className={cn(
+                                            "h-4 w-4",
+                                            message.direction === 'out' ? "text-white" : "text-gray-600"
+                                          )} />
+                                        </div>
+                                        <span className="text-sm font-medium">Голосовое сообщение</span>
                                       </div>
                                       {message.voiceUrl ? (
                                         <audio 
                                           controls 
-                                          className="w-full max-w-xs"
+                                          className="w-full"
                                           preload="metadata"
+                                          style={{ minWidth: '280px' }}
                                         >
                                           <source src={message.voiceUrl} type="audio/mp4" />
                                           Ваш браузер не поддерживает аудио элемент.
                                         </audio>
                                       ) : (
-                                        <p className="text-xs opacity-75">Загрузка...</p>
+                                        <div className="flex items-center gap-2 py-2">
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                          <p className="text-xs opacity-75">Загрузка аудио...</p>
+                                        </div>
                                       )}
                                       <span className={cn(
-                                        "text-xs mt-1 block text-right",
+                                        "text-xs block text-right",
                                         message.direction === 'out' 
                                           ? "text-white/60" 
                                           : "text-gray-400"
