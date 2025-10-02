@@ -448,10 +448,10 @@ export default function MessagesPage() {
       clearInterval(autoRefreshInterval);
     }
 
-    // Start new interval - refresh every 3 seconds
+    // Start new interval - refresh every 30 seconds
     const interval = setInterval(() => {
       loadMessages(chat, true); // true = silent refresh
-    }, 3000);
+    }, 30000);
 
     setAutoRefreshInterval(interval);
   };
@@ -470,12 +470,12 @@ export default function MessagesPage() {
       clearInterval(chatsRefreshInterval);
     }
 
-    // Start new interval - refresh every 10 seconds
+    // Start new interval - refresh every 30 seconds
     const interval = setInterval(() => {
       if (selectedAccount) {
         loadChats(true); // true = silent refresh
       }
-    }, 10000);
+    }, 30000);
 
     setChatsRefreshInterval(interval);
   };
@@ -517,8 +517,10 @@ export default function MessagesPage() {
           setMessages(reversedMessages);
           console.log('✅ Messages set to state:', reversedMessages.length);
           
-          // Auto-scroll to show last message when opening chat
-          setShouldScroll(true);
+          // Auto-scroll to show last message ONLY when opening chat (not on silent refresh)
+          if (!silent) {
+            setShouldScroll(true);
+          }
         } else {
           setMessages([]);
           console.log('❌ No messages found');
@@ -1180,12 +1182,15 @@ export default function MessagesPage() {
                                     </p>
                                   )}
                                 </div>
-                                <span className={cn(
-                                  "text-xs text-gray-500 mt-1 px-2",
-                                  message.direction === 'out' ? "text-right" : "text-left"
+                                <div className={cn(
+                                  "flex items-center gap-1.5 mt-1 px-2",
+                                  message.direction === 'out' ? "flex-row-reverse" : "flex-row"
                                 )}>
-                                  {message.createdFormatted}
-                                </span>
+                                  <Clock className="h-3 w-3 text-gray-400" />
+                                  <span className="text-xs text-gray-600 font-medium">
+                                    {formatTimestamp(message.created)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           ))}
