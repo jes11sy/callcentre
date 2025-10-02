@@ -334,7 +334,9 @@ async function handleCallEnd(webhookData: any) {
               login: true
             }
           },
-          mango: true
+          mango: true,
+          avito: true,
+          phone: true
         }
       });
       
@@ -388,7 +390,9 @@ async function handleCallEnd(webhookData: any) {
               login: true
             }
           },
-          mango: true
+          mango: true,
+          avito: true,
+          phone: true
         }
       });
 
