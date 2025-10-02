@@ -25,14 +25,14 @@ export const createRateLimit = (windowMs: number, max: number, message: string) 
 // General API rate limiting (relaxed for development)
 export const apiRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  1000, // 1000 requests per window (increased for development)
+  10000, // 10000 requests per window (very relaxed for active work)
   'Too many requests from this IP, please try again later'
 );
 
 // Auth endpoints rate limiting (more restrictive)
 export const authRateLimit = createRateLimit(
   5 * 60 * 1000, // 5 minutes
-  100, // 100 login attempts per window (temporarily increased for testing)
+  500, // 500 login attempts per window (very relaxed)
   'Too many authentication attempts, please try again later'
 );
 
