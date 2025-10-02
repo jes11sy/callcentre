@@ -165,7 +165,8 @@ type SendMessageFormData = z.infer<typeof sendMessageSchema>;
 
 export default function MessagesPage() {
   const router = useRouter();
-  const socket = useSocket();
+  // const socket = useSocket(); // Временно отключено до полного деплоя webhook
+  const socket = null;
   
   // State
   const [avitoAccounts, setAvitoAccounts] = useState<AvitoAccount[]>([]);
