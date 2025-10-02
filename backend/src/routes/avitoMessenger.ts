@@ -95,4 +95,20 @@ router.post('/chats/:chatId/messages', avitoMessengerController.sendMessage);
  */
 router.post('/voice-files', avitoMessengerController.getVoiceFileUrls);
 
+/**
+ * @route POST /api/avito-messenger/webhook/register
+ * @desc Зарегистрировать webhook для уведомлений от Авито
+ * @access Private (Admin)
+ * @body {string} avitoAccountName - Имя аккаунта Авито
+ */
+router.post('/webhook/register', avitoMessengerController.registerWebhook);
+
+/**
+ * @route GET /api/avito-messenger/webhook
+ * @desc Получить текущий зарегистрированный webhook URL
+ * @access Private (Admin, Operator)
+ * @query {string} avitoAccountName - Имя аккаунта Авито
+ */
+router.get('/webhook', avitoMessengerController.getWebhook);
+
 export default router;

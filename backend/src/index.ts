@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { logger } from './config/logger';
 import { getSSLConfig, loadSSLFiles, httpsRedirectMiddleware, securityHeadersMiddleware } from './config/ssl';
+import { setSocketIO } from './config/socket';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { 
@@ -62,6 +63,9 @@ const io = new Server(primaryServer, {
     credentials: true
   }
 });
+
+// Initialize Socket.IO singleton
+setSocketIO(io);
 
 const PORT = process.env.PORT || 5000;
 

@@ -446,5 +446,105 @@ export const avitoMessengerController = {
         message: 'Ошибка при получении голосовых файлов'
       });
     }
+  },
+
+  /**
+   * Register webhook for Avito account
+   */
+  async registerWebhook(req: AvitoMessengerRequest, res: Response) {
+    try {
+      const { avitoAccountName } = req.body;
+      const webhookUrl = `${process.env.BACKEND_URL || 'https://callcentre.lead-schem.ru'}/api/webhooks/avito`;
+
+      if (!avitoAccountName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Не указано имя Авито аккаунта'
+        });
+      }
+
+      const avitoAccount = await prisma.avito.findUnique({
+        where: { name: avitoAccountName },
+        select: AVITO_ACCOUNT_SELECT
+      });
+
+      if (!avitoAccount) {
+        return res.status(404).json({
+          success: false,
+          message: 'Авито аккаунт не найден'
+        });
+      }
+
+      const avitoService = createAvitoMessengerService(avitoAccount);
+      const success = await avitoService.registerWebhook(webhookUrl);
+
+      res.json({
+        success: true,
+        data: {
+          registered: success,
+          webhookUrl
+        },
+        message: success ? 'Webhook успешно зарегистрирован' : 'Не удалось зарегистрировать webhook'
+      });
+
+      logger.info(`Webhook registration attempt`, {
+        userId: req.user?.id,
+        avitoAccount: avitoAccountName,
+        webhookUrl,
+        success
+      });
+
+    } catch (error) {
+      logger.error('Error registering webhook:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Ошибка при регистрации webhook'
+      });
+    }
+  },
+
+  /**
+   * Get current webhook URL for Avito account
+   */
+  async getWebhook(req: AvitoMessengerRequest, res: Response) {
+    try {
+      const { avitoAccountName } = req.query;
+
+      if (!avitoAccountName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Не указано имя Авито аккаунта'
+        });
+      }
+
+      const avitoAccount = await prisma.avito.findUnique({
+        where: { name: avitoAccountName as string },
+        select: AVITO_ACCOUNT_SELECT
+      });
+
+      if (!avitoAccount) {
+        return res.status(404).json({
+          success: false,
+          message: 'Авито аккаунт не найден'
+        });
+      }
+
+      const avitoService = createAvitoMessengerService(avitoAccount);
+      const webhookUrl = await avitoService.getWebhook();
+
+      res.json({
+        success: true,
+        data: {
+          webhookUrl
+        }
+      });
+
+    } catch (error) {
+      logger.error('Error getting webhook:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Ошибка при получении webhook'
+      });
+    }
   }
 };

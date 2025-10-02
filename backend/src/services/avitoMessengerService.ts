@@ -446,6 +446,42 @@ export class AvitoMessengerService {
   }
 
   /**
+   * Register webhook URL for notifications
+   */
+  async registerWebhook(webhookUrl: string): Promise<boolean> {
+    try {
+      const response = await this.api.post(
+        `/messenger/v3/webhook`,
+        { url: webhookUrl }
+      );
+      
+      logger.info(`Webhook registered successfully for user ${this.config.userId}`, {
+        webhookUrl
+      });
+      return response.data.ok === true;
+    } catch (error) {
+      logger.error(`Error registering webhook:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current webhook URL
+   */
+  async getWebhook(): Promise<string | null> {
+    try {
+      const response = await this.api.get(
+        `/messenger/v3/webhook`
+      );
+      
+      return response.data.url || null;
+    } catch (error) {
+      logger.error(`Error getting webhook:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Send text message to chat
    */
   async sendMessage(chatId: string, text: string): Promise<AvitoMessage> {

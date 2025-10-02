@@ -61,6 +61,7 @@ import { notifications } from '@/components/ui/notifications';
 import { cn } from '@/lib/utils';
 import { CreateOrderFromChatModal } from '@/components/messages/CreateOrderFromChatModal';
 import { useRouter } from 'next/navigation';
+import { useSocket } from '@/hooks/useSocket';
 
 // Types
 interface AvitoAccount {
@@ -164,6 +165,7 @@ type SendMessageFormData = z.infer<typeof sendMessageSchema>;
 
 export default function MessagesPage() {
   const router = useRouter();
+  const socket = useSocket();
   
   // State
   const [avitoAccounts, setAvitoAccounts] = useState<AvitoAccount[]>([]);
@@ -714,6 +716,62 @@ export default function MessagesPage() {
       stopChatsAutoRefresh();
     };
   }, []);
+
+  // Setup Socket.IO listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    // Handle new message from webhook
+    socket.on('avito-new-message', (data: { chatId: string; message: any }) => {
+      console.log('🔔 New message from webhook:', data);
+      
+      // If it's the currently open chat, add message to the list
+      if (selectedChat && selectedChat.id === data.chatId) {
+        setMessages(prev => [...prev, {
+          id: data.message.id,
+          authorId: data.message.authorId,
+          content: data.message.content,
+          text: data.message.content?.text || '',
+          created: data.message.created,
+          createdFormatted: formatTimestamp(data.message.created),
+          direction: data.message.direction,
+          type: data.message.type,
+          isRead: false
+        }]);
+        
+        // Auto-scroll to new message
+        setShouldScroll(true);
+      }
+      
+      // Mark chat as having new message
+      setChats(prevChats => 
+        prevChats.map(chat => 
+          chat.id === data.chatId 
+            ? { ...chat, hasNewMessage: true }
+            : chat
+        )
+      );
+      
+      // Show notification
+      notifications.info('Новое сообщение в чате Авито');
+    });
+
+    // Handle chat update from webhook
+    socket.on('avito-chat-updated', (data: { chatId: string }) => {
+      console.log('🔔 Chat updated from webhook:', data);
+      
+      // Reload chats list
+      if (selectedAccount) {
+        loadChats(true);
+      }
+    });
+
+    // Cleanup
+    return () => {
+      socket.off('avito-new-message');
+      socket.off('avito-chat-updated');
+    };
+  }, [socket, selectedChat, selectedAccount]);
 
   return (
     <DashboardLayout>

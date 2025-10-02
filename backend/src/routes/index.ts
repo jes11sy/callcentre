@@ -13,6 +13,7 @@ import orderRoutes from './orders';
 import avitoMessengerRoutes from './avitoMessenger';
 import profileRoutes from './profile';
 import mangoWebhookRoutes from './mangoWebhook';
+import avitoWebhookRoutes from './avitoWebhook';
 import recordingRoutes from './recordings';
 import emailSettingsRoutes from './emailSettings';
 import healthRoutes from './health';
@@ -22,6 +23,7 @@ const router = Router();
 // Public routes
 router.use('/auth', authRoutes);
 router.use('/webhooks/mango', mangoWebhookRoutes); // Webhook от Mango ATC (без аутентификации)
+router.use('/webhooks', avitoWebhookRoutes); // Webhook от Avito Messenger (без аутентификации)
 router.use('/health', healthRoutes); // Health check endpoints (без аутентификации)
 
 // Protected routes (require authentication)
