@@ -65,7 +65,6 @@ model Avito {
   isOnline                Boolean?  @default(false) @map("is_online")
   lastOnlineCheck         DateTime? @map("last_online_check")
   onlineKeepAliveInterval Int?      @default(300) @map("online_keep_alive_interval")
-  orders                  Order[]
 
   @@map("avito")
 }
