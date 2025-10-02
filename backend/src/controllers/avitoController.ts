@@ -31,11 +31,6 @@ export const getAllAvitoAccounts = async (req: Request, res: Response) => {
         lastSyncAt: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            orders: true,
-          },
-        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -111,11 +106,6 @@ export const getAvitoAccountById = async (req: Request, res: Response) => {
         lastSyncAt: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            orders: true,
-          },
-        },
       },
     });
 
