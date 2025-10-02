@@ -426,6 +426,26 @@ export class AvitoMessengerService {
   }
 
   /**
+   * Get voice file URLs by voice IDs
+   */
+  async getVoiceFileUrls(voiceIds: string[]): Promise<Record<string, string>> {
+    try {
+      const response = await this.api.get(
+        `/messenger/v1/accounts/${this.config.userId}/getVoiceFiles`,
+        {
+          params: { voice_ids: voiceIds }
+        }
+      );
+      
+      logger.info(`Retrieved voice file URLs for ${voiceIds.length} voice messages`);
+      return response.data.voices_urls || {};
+    } catch (error) {
+      logger.error(`Error getting voice file URLs:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Send text message to chat
    */
   async sendMessage(chatId: string, text: string): Promise<AvitoMessage> {

@@ -115,6 +115,7 @@ interface AvitoMessage {
   type: string;
   isRead: boolean;
   imageUrl?: string;
+  voiceUrl?: string;
 }
 
 interface LinkedOrder {
@@ -500,6 +501,36 @@ export default function MessagesPage() {
     }
   };
 
+  // Load voice file URLs for voice messages
+  const loadVoiceUrls = async (messages: AvitoMessage[], chat: AvitoChat) => {
+    const voiceMessages = messages.filter(msg => msg.type === 'voice' && msg.content?.voice?.voice_id);
+    if (voiceMessages.length === 0) return messages;
+
+    try {
+      const voiceIds = voiceMessages.map(msg => msg.content.voice.voice_id);
+      const response = await authApi.post(
+        `/avito-messenger/voice-files?avitoAccountName=${chat.avitoAccountName}`,
+        { voiceIds }
+      );
+
+      if (response.data.success) {
+        const voiceUrls = response.data.data;
+        return messages.map(msg => {
+          if (msg.type === 'voice' && msg.content?.voice?.voice_id) {
+            return {
+              ...msg,
+              voiceUrl: voiceUrls[msg.content.voice.voice_id]
+            };
+          }
+          return msg;
+        });
+      }
+    } catch (error) {
+      console.error('Error loading voice URLs:', error);
+    }
+    return messages;
+  };
+
   // Load messages for selected chat
   const loadMessages = async (chat: AvitoChat, silent = false) => {
     try {
@@ -522,13 +553,16 @@ export default function MessagesPage() {
       console.log('🔍 Raw response data:', response.data);
       console.log('🔍 Data object:', response.data.data);
       console.log('🔍 Messages array:', response.data.data?.messages);
-      const messages = response.data.data?.messages || [];
+      let messages = response.data.data?.messages || [];
       console.log('📨 Messages loaded:', messages.length, messages);
         
         if (messages.length > 0) {
           const reversedMessages = messages.reverse(); // Reverse to show oldest first
-          setMessages(reversedMessages);
-          console.log('✅ Messages set to state:', reversedMessages.length);
+          
+          // Load voice URLs for voice messages
+          const messagesWithVoice = await loadVoiceUrls(reversedMessages, chat);
+          setMessages(messagesWithVoice);
+          console.log('✅ Messages set to state:', messagesWithVoice.length);
           
           // Auto-scroll to show last message ONLY when opening chat (not on silent refresh)
           if (!silent) {
@@ -930,7 +964,7 @@ export default function MessagesPage() {
                             {chat.users[0]?.name || 'Неизвестный пользователь'}
                           </h3>
                           <span className="text-xs text-gray-500 ml-2 font-medium whitespace-nowrap">
-                            {formatTimestamp(chat.lastMessage?.created || chat.updated)}
+                            {formatTimestamp(chat.lastMessage?.created || (chat as any).last_message?.created || chat.updated)}
                           </span>
                         </div>
 
@@ -1188,6 +1222,37 @@ export default function MessagesPage() {
                                         onClick={() => window.open(message.imageUrl, '_blank')}
                                       />
                                       <p className="text-xs opacity-75">{message.text}</p>
+                                      <span className={cn(
+                                        "text-xs mt-1 block text-right",
+                                        message.direction === 'out' 
+                                          ? "text-white/60" 
+                                          : "text-gray-400"
+                                      )}>
+                                        {formatTimestamp(message.created)}
+                                      </span>
+                                    </div>
+                                  ) : message.type === 'voice' && message.voiceUrl ? (
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <Mic className="h-4 w-4" />
+                                        <span className="text-sm">Голосовое сообщение</span>
+                                      </div>
+                                      <audio 
+                                        controls 
+                                        className="w-full max-w-xs"
+                                        preload="metadata"
+                                      >
+                                        <source src={message.voiceUrl} type="audio/mp4" />
+                                        Ваш браузер не поддерживает аудио элемент.
+                                      </audio>
+                                      <span className={cn(
+                                        "text-xs mt-1 block text-right",
+                                        message.direction === 'out' 
+                                          ? "text-white/60" 
+                                          : "text-gray-400"
+                                      )}>
+                                        {formatTimestamp(message.created)}
+                                      </span>
                                     </div>
                                   ) : (
                                     <div>

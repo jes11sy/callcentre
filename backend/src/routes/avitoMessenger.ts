@@ -86,4 +86,13 @@ router.post('/chats/:chatId/read', avitoMessengerController.markMessagesAsRead);
  */
 router.post('/chats/:chatId/messages', avitoMessengerController.sendMessage);
 
+/**
+ * @route POST /api/avito-messenger/voice-files
+ * @desc Получить ссылки на голосовые файлы по их ID
+ * @access Private (Admin, Operator)
+ * @query {string} avitoAccountName - Имя аккаунта Авито
+ * @body {string[]} voiceIds - Массив ID голосовых сообщений
+ */
+router.post('/voice-files', avitoMessengerController.getVoiceFileUrls);
+
 export default router;

@@ -389,5 +389,62 @@ export const avitoMessengerController = {
         message: 'Ошибка при отправке сообщения'
       });
     }
+  },
+
+  /**
+   * Get voice file URLs by voice IDs
+   */
+  async getVoiceFileUrls(req: AvitoMessengerRequest, res: Response) {
+    try {
+      const { avitoAccountName } = req.query;
+      const { voiceIds } = req.body;
+
+      if (!avitoAccountName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Не указано имя Авито аккаунта'
+        });
+      }
+
+      if (!voiceIds || !Array.isArray(voiceIds) || voiceIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Не указаны ID голосовых сообщений'
+        });
+      }
+
+      const avitoAccount = await prisma.avito.findUnique({
+        where: { name: avitoAccountName as string },
+        select: AVITO_ACCOUNT_SELECT
+      });
+
+      if (!avitoAccount) {
+        return res.status(404).json({
+          success: false,
+          message: 'Авито аккаунт не найден'
+        });
+      }
+
+      const avitoService = createAvitoMessengerService(avitoAccount);
+      const voiceUrls = await avitoService.getVoiceFileUrls(voiceIds);
+
+      res.json({
+        success: true,
+        data: voiceUrls
+      });
+
+      logger.info(`Retrieved voice file URLs`, {
+        userId: req.user?.id,
+        avitoAccount: avitoAccountName,
+        voiceCount: voiceIds.length
+      });
+
+    } catch (error) {
+      logger.error('Error getting voice file URLs:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Ошибка при получении голосовых файлов'
+      });
+    }
   }
 };
