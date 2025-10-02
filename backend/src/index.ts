@@ -54,14 +54,14 @@ if (sslConfig.enabled) {
   logger.info('SSL disabled - using HTTP server');
 }
 
-// Socket.IO настройка
-const primaryServer = httpsServer || server;
-const io = new Server(primaryServer, {
+// Socket.IO настройка - всегда на HTTP сервере (порт 5000) для nginx проксирования
+const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
-  }
+  },
+  path: '/socket.io/'
 });
 
 // Initialize Socket.IO singleton
