@@ -34,7 +34,6 @@ export const getAllAvitoAccounts = async (req: Request, res: Response) => {
         _count: {
           select: {
             orders: true,
-            calls: true,
           },
         },
       },
@@ -115,7 +114,6 @@ export const getAvitoAccountById = async (req: Request, res: Response) => {
         _count: {
           select: {
             orders: true,
-            calls: true,
           },
         },
       },

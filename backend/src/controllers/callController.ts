@@ -35,12 +35,6 @@ export const callController = {
               login: true
             }
           },
-          avito: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
           mango: {
             select: {
               id: true,
