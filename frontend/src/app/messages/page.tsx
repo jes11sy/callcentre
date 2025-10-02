@@ -696,7 +696,19 @@ export default function MessagesPage() {
       return '';
     }
     try {
-      return new Date(timestamp * 1000).toLocaleString('ru-RU', {
+      // Проверяем, является ли timestamp уже в миллисекундах (больше 1e12)
+      // или в секундах (меньше 1e12)
+      const date = timestamp > 1e12 
+        ? new Date(timestamp) 
+        : new Date(timestamp * 1000);
+      
+      // Проверяем, что дата валидна
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid timestamp:', timestamp);
+        return '';
+      }
+      
+      return date.toLocaleString('ru-RU', {
         day: '2-digit',
         month: '2-digit',
         hour: '2-digit',
