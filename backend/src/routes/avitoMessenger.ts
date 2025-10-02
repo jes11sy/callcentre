@@ -73,8 +73,7 @@ router.get('/chats/:chatId/messages', avitoMessengerController.getChatMessages);
  * @param {string} chatId - ID чата
  * @body {string} avitoAccountName - Имя аккаунта Авито
  */
-// Note: Avito API doesn't support marking messages as read endpoint
-// router.post('/chats/:chatId/read', avitoMessengerController.markMessagesAsRead);
+router.post('/chats/:chatId/read', avitoMessengerController.markMessagesAsRead);
 
 /**
  * @route POST /api/avito-messenger/chats/:chatId/messages

@@ -395,6 +395,19 @@ export default function MessagesPage() {
     );
   };
 
+  // Mark messages as read on Avito
+  const markMessagesAsReadOnAvito = async (chat: AvitoChat) => {
+    try {
+      await authApi.post(`/avito-messenger/chats/${chat.id}/read`, {
+        avitoAccountName: chat.avitoAccountName
+      });
+      console.log(`✅ Messages marked as read for chat ${chat.id} on Avito`);
+    } catch (error) {
+      console.error('❌ Error marking messages as read on Avito:', error);
+      // Не показываем ошибку пользователю, это фоновая операция
+    }
+  };
+
   // Removed checkChatReadStatus - using Avito API unread_only parameter instead
 
   // Check unread chats using Avito API unread_only parameter
@@ -883,8 +896,8 @@ export default function MessagesPage() {
                         await loadMessages(chat);
                         startAutoRefresh(chat);
                         
-                        // Note: Avito API doesn't support marking messages as read
-                        // The unread status is handled by the API itself
+                        // Mark messages as read on Avito
+                        markMessagesAsReadOnAvito(chat);
                       }}
                       className={cn(
                         "group flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all duration-200",
@@ -1177,19 +1190,20 @@ export default function MessagesPage() {
                                       <p className="text-xs opacity-75">{message.text}</p>
                                     </div>
                                   ) : (
-                                    <p className="text-sm leading-relaxed break-words">
-                                      {message.content?.text || 'NO TEXT'}
-                                    </p>
+                                    <div>
+                                      <p className="text-sm leading-relaxed break-words pr-16">
+                                        {message.content?.text || 'NO TEXT'}
+                                      </p>
+                                      <span className={cn(
+                                        "text-xs mt-1 block text-right",
+                                        message.direction === 'out' 
+                                          ? "text-white/60" 
+                                          : "text-gray-400"
+                                      )}>
+                                        {formatTimestamp(message.created)}
+                                      </span>
+                                    </div>
                                   )}
-                                </div>
-                                <div className={cn(
-                                  "flex items-center gap-1.5 mt-1 px-2",
-                                  message.direction === 'out' ? "flex-row-reverse" : "flex-row"
-                                )}>
-                                  <Clock className="h-3 w-3 text-gray-400" />
-                                  <span className="text-xs text-gray-600 font-medium">
-                                    {formatTimestamp(message.created)}
-                                  </span>
                                 </div>
                               </div>
                             </div>
