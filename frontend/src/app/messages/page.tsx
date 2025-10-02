@@ -713,11 +713,13 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (selectedAccount) {
+      setChats([]); // Очищаем чаты перед новой загрузкой
       loadChats();
       startChatsAutoRefresh();
     } else {
       stopChatsAutoRefresh();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccount, filterUnread]);
 
   // Cleanup auto-refresh on component unmount or chat change
