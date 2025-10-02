@@ -432,26 +432,27 @@ async function findOperatorByPhone(phoneNumber: string) {
   try {
     logger.info(`Поиск оператора для номера: ${phoneNumber}`);
     
-    // Сначала ищем оператора по SIP-адресу
+    // Ищем оператора по SIP-адресу И проверяем статус работы
     const operatorBySip = await prisma.callcentreOperator.findFirst({
       where: { 
         status: 'active',
+        statusWork: 'working', // Проверяем, что оператор на работе
         sipAddress: phoneNumber
       }
     });
     
     if (operatorBySip) {
-      logger.info('Найден оператор по SIP-адресу:', { operator: operatorBySip });
+      logger.info('Найден оператор по SIP-адресу и статусу работы:', { 
+        operator: operatorBySip,
+        sipAddress: operatorBySip.sipAddress,
+        statusWork: operatorBySip.statusWork
+      });
       return operatorBySip;
     }
     
-    // Если не найден по SIP, берем первого активного оператора
-    const operator = await prisma.callcentreOperator.findFirst({
-      where: { status: 'active' }
-    });
-    
-    logger.info('Найденный оператор (fallback):', { operator });
-    return operator;
+    // Если не найден - не создаем звонок
+    logger.warn(`Оператор не найден для SIP-адреса: ${phoneNumber} (проверка: status='active', statusWork='working')`);
+    return null;
     
   } catch (error) {
     logger.error('Ошибка при поиске оператора:', error);
