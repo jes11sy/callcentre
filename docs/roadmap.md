@@ -166,6 +166,7 @@
 - [X] Добавить настройки Mango ATC в админ панель - создать страницу конфигурации с тестированием подключения
 - [X] Создать подробную инструкцию по настройке webhook в панели Mango Office
 - [X] Исправить проблему с rate limiting в nginx для webhook endpoints Mango Office
+- [X] Исправить ошибку Foreign Key Constraint при создании звонков - убрать неправильную связь от calls.avito_name к avito.name
 
 ## Этап 7: Статистика сотрудника
 

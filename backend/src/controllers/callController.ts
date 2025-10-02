@@ -219,12 +219,6 @@ export const callController = {
               city: true
             }
           },
-          avito: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
           phone: {
             select: {
               id: true,
