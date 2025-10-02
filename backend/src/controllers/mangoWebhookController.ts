@@ -436,7 +436,7 @@ async function findOperatorByPhone(phoneNumber: string) {
     const operatorBySip = await prisma.callcentreOperator.findFirst({
       where: { 
         status: 'active',
-        statusWork: 'working', // Проверяем, что оператор на работе
+        statusWork: { in: ['online', 'break'] }, // Оператор онлайн или на перерыве
         sipAddress: phoneNumber
       }
     });
@@ -450,9 +450,24 @@ async function findOperatorByPhone(phoneNumber: string) {
       return operatorBySip;
     }
     
-    // Если не найден - не создаем звонок
-    logger.warn(`Оператор не найден для SIP-адреса: ${phoneNumber} (проверка: status='active', statusWork='working')`);
-    return null;
+    // Если не найден - используем оператора с ID = 1 (fallback)
+    logger.warn(`Оператор не найден для SIP-адреса: ${phoneNumber}, используем fallback оператора ID=1`);
+    
+    const fallbackOperator = await prisma.callcentreOperator.findUnique({
+      where: { id: 1 }
+    });
+    
+    if (!fallbackOperator) {
+      logger.error('Fallback оператор с ID=1 не найден!');
+      return null;
+    }
+    
+    logger.info('Используем fallback оператора:', { 
+      operator: fallbackOperator,
+      reason: 'SIP-адрес не найден'
+    });
+    
+    return fallbackOperator;
     
   } catch (error) {
     logger.error('Ошибка при поиске оператора:', error);
