@@ -165,8 +165,7 @@ type SendMessageFormData = z.infer<typeof sendMessageSchema>;
 
 export default function MessagesPage() {
   const router = useRouter();
-  // const socket = useSocket(); // Временно отключено до полного деплоя webhook
-  const socket = null;
+  const socket = useSocket();
   
   // State
   const [avitoAccounts, setAvitoAccounts] = useState<AvitoAccount[]>([]);
@@ -297,18 +296,32 @@ export default function MessagesPage() {
 
       const accountChats = await Promise.all(chatPromises);
       
-      // Flatten and sort all chats by last message time
-      const allChats = accountChats
-        .flat()
+      // Flatten and remove duplicates
+      const allChats = accountChats.flat();
+      
+      console.log('🔍 All chats before dedup:', allChats.length);
+      console.log('🔍 Sample chat data:', allChats[0]);
+      
+      // Дедупликация по уникальному ключу (chat.id + avitoAccountName)
+      const uniqueChatsMap = new Map<string, AvitoChat>();
+      allChats.forEach((chat: AvitoChat) => {
+        const uniqueKey = `${chat.id}_${chat.avitoAccountName}`;
+        if (!uniqueChatsMap.has(uniqueKey)) {
+          uniqueChatsMap.set(uniqueKey, chat);
+        }
+      });
+      
+      // Convert back to array and sort by last message time
+      const uniqueChats = Array.from(uniqueChatsMap.values())
         .sort((a, b) => {
-          const timeA = a.last_message?.created || a.updated;
-          const timeB = b.last_message?.created || b.updated;
+          const timeA = (a as any).last_message?.created || a.lastMessage?.created || a.updated;
+          const timeB = (b as any).last_message?.created || b.lastMessage?.created || b.updated;
           return timeB - timeA; // Newest first
         });
 
       // Set chats with existing hasNewMessage status
-      const updatedChats = allChats.map((chat: AvitoChat) => {
-        const existingChat = chats.find(c => c.id === chat.id);
+      const updatedChats = uniqueChats.map((chat: AvitoChat) => {
+        const existingChat = chats.find(c => c.id === chat.id && c.avitoAccountName === chat.avitoAccountName);
         return {
           ...chat,
           hasNewMessage: existingChat?.hasNewMessage || false
@@ -316,7 +329,7 @@ export default function MessagesPage() {
       });
       
       setChats(updatedChats);
-      console.log(`📝 Loaded ${updatedChats.length} chats from all accounts`);
+      console.log(`📝 Loaded ${updatedChats.length} unique chats from all accounts (before dedup: ${allChats.length})`);
       
     } catch (err: any) {
       console.error('Error loading chats from all accounts:', err);
@@ -1027,7 +1040,10 @@ export default function MessagesPage() {
                             {chat.users[0]?.name || 'Неизвестный пользователь'}
                           </h3>
                           <span className="text-xs text-gray-500 ml-2 font-medium whitespace-nowrap">
-                            {formatTimestamp(chat.lastMessage?.created || (chat as any).last_message?.created || chat.updated)}
+                            {(() => {
+                              const timestamp = chat.lastMessage?.created || (chat as any).last_message?.created || chat.updated;
+                              return formatTimestamp(timestamp);
+                            })()}
                           </span>
                         </div>
 
