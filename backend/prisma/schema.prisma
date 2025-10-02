@@ -126,7 +126,6 @@ model Order {
   updatedAt      DateTime           @updatedAt @map("updated_at")
   avitoChatId    String?            @map("avito_chatid")
   callId         String?            @map("call_id")
-  avito          Avito?             @relation(fields: [avitoName], references: [name])
   operator       CallcentreOperator @relation(fields: [operatorNameId], references: [id])
   master         Master?            @relation(fields: [masterId], references: [id])
 

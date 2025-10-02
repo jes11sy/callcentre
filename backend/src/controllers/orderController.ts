@@ -153,12 +153,6 @@ export const orderController = {
               name: true,
               login: true
             }
-          },
-          avito: {
-            select: {
-              id: true,
-              name: true
-            }
           }
         }
       });
@@ -412,12 +406,6 @@ export const orderController = {
               name: true,
               login: true
             }
-          },
-          avito: {
-            select: {
-              id: true,
-              name: true
-            }
           }
         }
       });
@@ -600,12 +588,6 @@ export const orderController = {
               login: true
             }
           },
-          avito: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
           master: {
             select: {
               id: true,
@@ -689,12 +671,6 @@ export const orderController = {
               name: true,
               login: true,
               city: true
-            }
-          },
-          avito: {
-            select: {
-              id: true,
-              name: true
             }
           },
           master: {
@@ -942,12 +918,6 @@ export const orderController = {
               id: true,
               name: true,
               login: true
-            }
-          },
-          avito: {
-            select: {
-              id: true,
-              name: true
             }
           },
           master: {
