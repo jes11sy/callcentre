@@ -262,6 +262,9 @@ async function handleCallAnswer(webhookData: any) {
     });
 
     logger.info(`Звонок ${webhookData.call_id} отвечен`);
+
+    // Создаем запись звонка сразу при ответе
+    await createCallRecord(webhookData, 'answered');
   } catch (error) {
     logger.error('Ошибка при обновлении статуса ответа:', error);
   }
@@ -270,16 +273,6 @@ async function handleCallAnswer(webhookData: any) {
 // Обработка завершения звонка
 async function handleCallEnd(webhookData: any) {
   try {
-    // Сначала проверяем, существует ли запись Mango
-    const existingMango = await prisma.mango.findUnique({
-      where: { callId: webhookData.call_id }
-    });
-
-    if (!existingMango) {
-      logger.warn(`Запись Mango не найдена для callId: ${webhookData.call_id}`);
-      return;
-    }
-
     // Обновляем запись в таблице mango
     const mangoRecord = await prisma.mango.update({
       where: { callId: webhookData.call_id },
@@ -289,38 +282,16 @@ async function handleCallEnd(webhookData: any) {
       }
     });
 
-    // Определяем номер клиента и АТС
-    const phoneClient = webhookData.from?.number;
-    // Ищем оператора по SIP-адресу (to.number) или номеру АТС (to.line_number)
-    const sipAddress = webhookData.to?.number;
-    const phoneAts = webhookData.to?.line_number;
-
-    logger.info('Поиск оператора:', {
-      phoneClient,
-      phoneAts,
-      sipAddress,
-      toNumber: webhookData.to?.number,
-      toLineNumber: webhookData.to?.line_number
-    });
-
-    // Ищем оператора по SIP-адресу или номеру АТС
-    const operator = await findOperatorByPhone(sipAddress || phoneAts);
-    
-    if (!operator) {
-      logger.warn(`Оператор не найден для номера АТС: ${phoneAts}`);
-      return;
-    }
-
-    // Определяем статус звонка
+    // Определяем финальный статус звонка
     const callStatus = determineCallStatus(webhookData);
 
-    // Ищем существующую запись звонка
+    // Ищем существующую запись звонка и обновляем статус
     const existingCall = await prisma.call.findFirst({
       where: { mangoCallId: mangoRecord.id }
     });
 
     if (existingCall) {
-      // Обновляем существующую запись
+      // Обновляем статус существующего звонка
       const updatedCall = await prisma.call.update({
         where: { id: existingCall.id },
         data: {
@@ -339,7 +310,7 @@ async function handleCallEnd(webhookData: any) {
         }
       });
       
-      logger.info(`Обновлен звонок ID: ${existingCall.id}`);
+      logger.info(`Обновлен статус звонка ID: ${existingCall.id} на ${callStatus}`);
 
       // Broadcast call update to all connected operators via Socket.IO
       try {
@@ -369,61 +340,113 @@ async function handleCallEnd(webhookData: any) {
         logger.error('Error broadcasting call update:', error);
       }
     } else {
-      // Создаем новую запись звонка
-      const callData = await prepareCallData({
-        phoneClient,
-        phoneAts,
-        operatorId: operator.id,
-        status: callStatus,
-        mangoCallId: mangoRecord.id
-      });
-
-      const call = await prisma.call.create({
-        data: callData,
-        include: {
-          operator: {
-            select: {
-              id: true,
-              name: true,
-              login: true
-            }
-          },
-          mango: true,
-          phone: true
-        }
-      });
-
-      logger.info(`Создан новый звонок ID: ${call.id} для ${phoneClient}`);
-
-      // Broadcast new call to all connected operators via Socket.IO
-      try {
-        const io = getSocketIO();
-        io.emit('mango-new-call', {
-          call: {
-            id: call.id,
-            rk: call.rk,
-            city: call.city,
-            avitoName: call.avitoName,
-            phoneClient: call.phoneClient,
-            phoneAts: call.phoneAts,
-            dateCreate: call.dateCreate.toISOString(),
-            status: call.status,
-            recordingPath: call.recordingPath,
-            recordingEmailSent: call.recordingEmailSent,
-            recordingProcessedAt: call.recordingProcessedAt?.toISOString(),
-            operator: call.operator,
-            phone: call.phone,
-            mango: call.mango
-          }
-        });
-        
-        logger.info('✅ Broadcasted new call event to operators');
-      } catch (error) {
-        logger.error('Error broadcasting new call:', error);
-      }
+      // Если звонок не был создан при ответе, создаем его сейчас
+      logger.warn(`Звонок не найден для callId: ${webhookData.call_id}, создаем при завершении`);
+      await createCallRecord(webhookData, callStatus);
     }
   } catch (error) {
     logger.error('Ошибка при обработке завершения звонка:', error);
+  }
+}
+
+// Создание записи звонка
+async function createCallRecord(webhookData: any, initialStatus: string) {
+  try {
+    // Определяем номер клиента и АТС
+    const phoneClient = webhookData.from?.number;
+    const sipAddress = webhookData.to?.number;
+    const phoneAts = webhookData.to?.line_number;
+
+    logger.info('Создание записи звонка:', {
+      phoneClient,
+      phoneAts,
+      sipAddress,
+      initialStatus
+    });
+
+    // Ищем оператора
+    const operator = await findOperatorByPhone(sipAddress || phoneAts);
+    
+    if (!operator) {
+      logger.warn(`Оператор не найден для номера АТС: ${phoneAts}`);
+      return;
+    }
+
+    // Находим запись Mango
+    const mangoRecord = await prisma.mango.findUnique({
+      where: { callId: webhookData.call_id }
+    });
+
+    if (!mangoRecord) {
+      logger.warn(`Запись Mango не найдена для callId: ${webhookData.call_id}`);
+      return;
+    }
+
+    // Проверяем, не создан ли уже звонок
+    const existingCall = await prisma.call.findFirst({
+      where: { mangoCallId: mangoRecord.id }
+    });
+
+    if (existingCall) {
+      logger.info(`Звонок уже существует ID: ${existingCall.id}`);
+      return;
+    }
+
+    // Создаем новую запись звонка
+    const callData = await prepareCallData({
+      phoneClient,
+      phoneAts,
+      operatorId: operator.id,
+      status: initialStatus,
+      mangoCallId: mangoRecord.id
+    });
+
+    const call = await prisma.call.create({
+      data: callData,
+      include: {
+        operator: {
+          select: {
+            id: true,
+            name: true,
+            login: true
+          }
+        },
+        mango: true,
+        phone: true
+      }
+    });
+
+    logger.info(`Создан новый звонок ID: ${call.id} для ${phoneClient}`);
+
+    // Broadcast new call to all connected operators via Socket.IO
+    try {
+      const io = getSocketIO();
+      io.emit('mango-new-call', {
+        call: {
+          id: call.id,
+          rk: call.rk,
+          city: call.city,
+          avitoName: call.avitoName,
+          phoneClient: call.phoneClient,
+          phoneAts: call.phoneAts,
+          dateCreate: call.dateCreate.toISOString(),
+          status: call.status,
+          recordingPath: call.recordingPath,
+          recordingEmailSent: call.recordingEmailSent,
+          recordingProcessedAt: call.recordingProcessedAt?.toISOString(),
+          operator: call.operator,
+          phone: call.phone,
+          mango: call.mango
+        }
+      });
+      
+      logger.info('✅ Broadcasted new call event to operators');
+    } catch (error) {
+      logger.error('Error broadcasting new call:', error);
+    }
+
+  } catch (error) {
+    logger.error('Ошибка при создании записи звонка:', error);
   }
 }
 
